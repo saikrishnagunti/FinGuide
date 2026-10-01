@@ -129,16 +129,60 @@ def auto_categorize(description: str, txn_type: str = "expense") -> str:
 
 def extract_metadata(all_text: str) -> dict[str, Any]:
     """Extract metadata including bank name, masked account number, and statement period."""
+    header_text = all_text[:2000].lower()
     lower_text = all_text.lower()
     detected_bank = "Bank Statement"
-    for bank_name, aliases in KNOWN_BANKS:
-        if any(alias in lower_text for alias in aliases):
-            detected_bank = bank_name
-            break
+
+    if "bankofbaroda" in lower_text or "barb0" in lower_text or "bob pay" in lower_text or "बैंक ऑफ़ बड़ौदा" in header_text or "bank of baroda" in header_text:
+        detected_bank = "Bank of Baroda"
+    elif "icicibank" in lower_text or "icic0" in lower_text or "icici bank" in header_text:
+        detected_bank = "ICICI Bank"
+    elif "hdfcbank.com" in lower_text or "hdfc bank" in header_text:
+        detected_bank = "HDFC Bank"
+    elif "sbi.co.in" in lower_text or "sbin0" in lower_text or "state bank of india" in header_text:
+        detected_bank = "State Bank of India"
+    elif "kotak.com" in lower_text or "kkbk0" in lower_text or "kotak mahindra" in header_text:
+        detected_bank = "Kotak Mahindra Bank"
+    elif "axisbank.com" in lower_text or "utib0" in lower_text or "axis bank" in header_text:
+        detected_bank = "Axis Bank"
+    elif "punjab national bank" in header_text or "pnb0" in lower_text:
+        detected_bank = "Punjab National Bank"
+    elif "canara bank" in header_text or "cnrb0" in lower_text:
+        detected_bank = "Canara Bank"
+    elif "union bank of india" in header_text or "ubin0" in lower_text:
+        detected_bank = "Union Bank of India"
+    elif "indusind bank" in header_text or "indb0" in lower_text:
+        detected_bank = "IndusInd Bank"
+    elif "idfc first" in header_text or "idfb0" in lower_text:
+        detected_bank = "IDFC FIRST Bank"
+    elif "yes bank" in header_text or "yesb0" in lower_text:
+        detected_bank = "Yes Bank"
+    elif "federal bank" in header_text or "fdrl0" in lower_text:
+        detected_bank = "Federal Bank"
+    elif "citibank" in header_text:
+        detected_bank = "Citibank"
+    elif "standard chartered" in header_text:
+        detected_bank = "Standard Chartered"
+    elif "hsbc" in header_text:
+        detected_bank = "HSBC Bank"
+    elif "chase bank" in header_text or "jpmorgan chase" in header_text:
+        detected_bank = "Chase Bank"
+    elif "bank of america" in header_text:
+        detected_bank = "Bank of America"
+    elif "wells fargo" in header_text:
+        detected_bank = "Wells Fargo"
+    elif re.search(r"\b(?:bob)\b", header_text):
+        detected_bank = "Bank of Baroda"
+    elif re.search(r"\b(?:icici)\b", header_text):
+        detected_bank = "ICICI Bank"
+    elif re.search(r"\b(?:sbi)\b", header_text):
+        detected_bank = "State Bank of India"
+    elif re.search(r"\b(?:hdfc)\b", header_text):
+        detected_bank = "HDFC Bank"
 
     # Masked account number detection
     ac_match = re.search(
-        r"(?:account\s*(?:no|number|#|id)?|a\/c\s*(?:no)?)\s*[:.-]?\s*([0-9Xx\*\-]{6,20})",
+        r"(?:account\s*(?:no|number|#|id)?|a\/c\s*(?:no)?|savings\s*account\s*(?:-\s*)?)\s*[:.-]?\s*([0-9Xx\*\-]{6,25})",
         all_text,
         flags=re.IGNORECASE,
     )

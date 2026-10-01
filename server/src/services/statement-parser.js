@@ -26,7 +26,7 @@ const KNOWN_BANKS = [
 ];
 
 const DATE_REGEX = /(\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b|\b\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2}\b|\b\d{1,2}[\s\-][A-Za-z]{3}[\s\-]\d{2,4}\b)/;
-const AMOUNT_REGEX = /(?:Rs\.?|INR|₹|\$|€|£)?\s*([0-9]{1,3}(?:,[0-9]{2,3})*\.[0-9]{2}|[0-9]+\.[0-9]{2})/gi;
+const AMOUNT_REGEX = /(?:^|\s)(?:Rs\.?|INR|₹|\$|€)?\s*([0-9]+(?:,[0-9]+)*\.[0-9]{2})(?=\s|$|[A-Za-z])/g;
 
 /**
  * Categorize transaction based on keywords in description.
@@ -205,7 +205,100 @@ export function parseCsvTransactions(filePath) {
 }
 
 /**
+ * Unambiguous bank identification based on document header and official identifiers.
+ * Prevents false positives from UPI payment handles like @hdfcba inside other banks' statements.
+ */
+export function detectBankName(allText) {
+  const headerText = allText.slice(0, 2000).toLowerCase();
+  const lowerAll = allText.toLowerCase();
+
+  // 1. Unambiguous official domain names, IFSC prefixes, or exact header titles
+  if (
+    lowerAll.includes('bankofbaroda') ||
+    lowerAll.includes('barb0') ||
+    lowerAll.includes('bob pay') ||
+    headerText.includes('बैंक ऑफ़ बड़ौदा') ||
+    headerText.includes('bank of baroda')
+  ) {
+    return 'Bank of Baroda';
+  }
+  if (
+    lowerAll.includes('icicibank') ||
+    lowerAll.includes('icic0') ||
+    headerText.includes('icici bank')
+  ) {
+    return 'ICICI Bank';
+  }
+  if (
+    headerText.includes('hdfc bank') ||
+    lowerAll.includes('hdfcbank.com') ||
+    (lowerAll.includes('hdfc0') && !lowerAll.includes('utib0') && !lowerAll.includes('barb0'))
+  ) {
+    return 'HDFC Bank';
+  }
+  if (
+    headerText.includes('state bank of india') ||
+    lowerAll.includes('sbi.co.in') ||
+    lowerAll.includes('sbin0')
+  ) {
+    return 'State Bank of India';
+  }
+  if (
+    headerText.includes('kotak mahindra') ||
+    headerText.includes('kotak bank') ||
+    lowerAll.includes('kotak.com') ||
+    lowerAll.includes('kkbk0')
+  ) {
+    return 'Kotak Mahindra Bank';
+  }
+  if (
+    headerText.includes('axis bank') ||
+    lowerAll.includes('axisbank.com') ||
+    lowerAll.includes('utib0')
+  ) {
+    return 'Axis Bank';
+  }
+  if (headerText.includes('punjab national bank') || lowerAll.includes('pnb0')) {
+    return 'Punjab National Bank';
+  }
+  if (headerText.includes('canara bank') || lowerAll.includes('cnrb0')) {
+    return 'Canara Bank';
+  }
+  if (headerText.includes('union bank of india') || lowerAll.includes('ubin0')) {
+    return 'Union Bank of India';
+  }
+  if (headerText.includes('indusind bank') || lowerAll.includes('indb0')) {
+    return 'IndusInd Bank';
+  }
+  if (headerText.includes('idfc first') || lowerAll.includes('idfb0')) {
+    return 'IDFC FIRST Bank';
+  }
+  if (headerText.includes('yes bank') || lowerAll.includes('yesb0')) {
+    return 'Yes Bank';
+  }
+  if (headerText.includes('federal bank') || lowerAll.includes('fdrl0')) {
+    return 'Federal Bank';
+  }
+  if (headerText.includes('citibank')) return 'Citibank';
+  if (headerText.includes('standard chartered')) return 'Standard Chartered';
+  if (headerText.includes('hsbc')) return 'HSBC Bank';
+  if (headerText.includes('chase bank') || headerText.includes('jpmorgan chase')) return 'Chase Bank';
+  if (headerText.includes('bank of america')) return 'Bank of America';
+  if (headerText.includes('wells fargo')) return 'Wells Fargo';
+
+  // 2. Word boundary aliases in the HEADER ONLY (never across transaction body where UPI IDs live)
+  if (/\b(?:bob)\b/i.test(headerText)) return 'Bank of Baroda';
+  if (/\b(?:icici)\b/i.test(headerText)) return 'ICICI Bank';
+  if (/\b(?:sbi)\b/i.test(headerText)) return 'State Bank of India';
+  if (/\b(?:hdfc)\b/i.test(headerText)) return 'HDFC Bank';
+  if (/\b(?:pnb)\b/i.test(headerText)) return 'Punjab National Bank';
+
+  return 'Bank Statement';
+}
+
+/**
  * Direct native PDF bank statement text parser (pure Node.js / pdf-parse).
+ * Supports both single-line and multi-line/table-cell statement layouts.
  * Works offline, in memory, and without requiring any external Python service.
  */
 export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
@@ -229,18 +322,11 @@ export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
     throw new Error('PDF file contains no readable text. It may be a scanned image or password-protected document.');
   }
 
-  // 1. Detect Bank Name
-  let detectedBank = 'Bank Statement';
-  const lowerText = allText.toLowerCase();
-  for (const [bankName, aliases] of KNOWN_BANKS) {
-    if (aliases.some(alias => lowerText.includes(alias))) {
-      detectedBank = bankName;
-      break;
-    }
-  }
+  // 1. Detect Bank Name with zero UPI false-positives
+  const detectedBank = detectBankName(allText);
 
   // 2. Detect Account Number (masked)
-  const acMatch = allText.match(/(?:account\s*(?:no|number|#|id)?|a\/c\s*(?:no)?)\s*[:.-]?\s*([0-9Xx*\-]{6,25})/i);
+  const acMatch = allText.match(/(?:account\s*(?:no|number|#|id)?|a\/c\s*(?:no)?|savings\s*account\s*(?:-\s*)?)\s*[:.-]?\s*([0-9Xx*\-]{6,25})/i);
   let accountNumber = null;
   if (acMatch && acMatch[1]) {
     const raw = acMatch[1].trim();
@@ -248,7 +334,7 @@ export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
   }
 
   // 3. Detect Period
-  const periodMatch = allText.match(/(?:period|statement\s*from|from)\s*[:.-]?\s*(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})\s*(?:to|-|through)\s*(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/i);
+  const periodMatch = allText.match(/(?:period|statement\s*from|from)\s*[:.-]?\s*(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|\d{1,2}[\s\-][A-Za-z]{3}[\s\-]\d{2,4})\s*(?:to|-|through)\s*(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|\d{1,2}[\s\-][A-Za-z]{3}[\s\-]\d{2,4})/i);
   let periodStart = null;
   let periodEnd = null;
   if (periodMatch) {
@@ -256,95 +342,135 @@ export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
     periodEnd = normalizeDate(periodMatch[2]);
   }
 
-  // 4. Parse transaction rows from text lines
-  const lines = allText.split(/\r?\n/);
-  const transactions = [];
+  // 4. Parse transaction blocks (handles single-line and multi-line statements like ICICI)
+  const lines = allText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const blocks = [];
+  let currentBlock = null;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+    const line = lines[i];
     const lowerLine = line.toLowerCase();
 
-    // Skip header/footer noise
+    // Skip table headers and non-transaction footers
     if (
+      lowerLine.startsWith('page ') ||
       lowerLine.includes('opening balance') ||
       lowerLine.includes('closing balance') ||
-      lowerLine.includes('total withdrawal') ||
-      lowerLine.includes('total deposit') ||
-      lowerLine.includes('page ') ||
+      lowerLine.includes('closing available balance') ||
+      lowerLine.includes('total debits') ||
+      lowerLine.includes('total credits') ||
+      lowerLine.includes('statement continued') ||
+      lowerLine.includes('corporate & current account disclosures') ||
+      lowerLine.includes('important messages for you') ||
+      lowerLine.includes('customer care') ||
+      lowerLine.includes('cyber crime helpline') ||
+      lowerLine.includes('narration / transaction details') ||
       lowerLine.includes('narration / description') ||
-      lowerLine.includes('account statement') ||
-      lowerLine.includes('statement of')
+      lowerLine.includes('withdrawal (dr)') ||
+      lowerLine.startsWith('chq / ref no.') ||
+      lowerLine.startsWith('chq.no.') ||
+      lowerLine.startsWith('relationship type') ||
+      lowerLine.startsWith('a summary of your relationship')
     ) {
       continue;
     }
 
     const dateMatch = line.match(DATE_REGEX);
-    if (!dateMatch) {
-      if (transactions.length > 0 && line.length < 100 && !/^\d+$/.test(line)) {
-        const last = transactions[transactions.length - 1];
-        last.description = `${last.description} ${line}`.replace(/\s+/g, ' ').trim();
+    if (dateMatch && (line.indexOf(dateMatch[1]) < 6 || !currentBlock)) {
+      if (currentBlock) {
+        blocks.push(currentBlock);
       }
-      continue;
+      currentBlock = {
+        date: dateMatch[1],
+        lines: [line],
+      };
+    } else if (currentBlock) {
+      currentBlock.lines.push(line);
     }
+  }
 
-    const rawDate = dateMatch[1];
-    const postDateText = line.slice(dateMatch.index + rawDate.length).trim();
+  if (currentBlock) {
+    blocks.push(currentBlock);
+  }
 
-    // Find all amounts
-    const amountMatches = [...postDateText.matchAll(AMOUNT_REGEX)].map(m => m[1]);
-    if (!amountMatches || amountMatches.length === 0) continue;
+  const transactions = [];
+  let prevBalance = null;
 
-    const nums = amountMatches.map(a => parseFloat(a.replace(/,/g, '')));
+  for (const block of blocks) {
+    const fullBlockText = block.lines.join(' ');
+    const lastLine = block.lines[block.lines.length - 1];
+
     let finalAmount = 0;
     let type = 'expense';
+    let balance = null;
 
-    if (nums.length >= 3) {
-      const debit = nums[0];
-      const credit = nums[1];
-      if (debit > 0) {
-        finalAmount = debit;
-        type = 'expense';
-      } else if (credit > 0) {
-        finalAmount = credit;
-        type = 'income';
+    // Pattern 1: Credit in table column: "- 3,85,000.00 8,03,650.00"
+    const crColMatch = lastLine.match(/-\s+([0-9,]+\.[0-9]{2})\s+([0-9,]+\.[0-9]{2})/);
+    // Pattern 2: Debit in table column: "65,000.00 - 7,38,650.00"
+    const drColMatch = lastLine.match(/([0-9,]+\.[0-9]{2})\s+-\s+([0-9,]+\.[0-9]{2})/);
+
+    if (crColMatch) {
+      type = 'income';
+      finalAmount = parseFloat(crColMatch[1].replace(/,/g, ''));
+      balance = parseFloat(crColMatch[2].replace(/,/g, ''));
+    } else if (drColMatch) {
+      type = 'expense';
+      finalAmount = parseFloat(drColMatch[1].replace(/,/g, ''));
+      balance = parseFloat(drColMatch[2].replace(/,/g, ''));
+    } else {
+      // General amount extraction with non-backtracking regex
+      const amountMatches = [...fullBlockText.matchAll(AMOUNT_REGEX)].map(m => m[1]);
+      if (!amountMatches || amountMatches.length === 0) continue;
+
+      const nums = amountMatches.map(a => parseFloat(a.replace(/,/g, '')));
+      if (nums.length >= 2) {
+        balance = nums[nums.length - 1];
+        finalAmount = nums[0];
+
+        // Specific keyword overrides first
+        if (/cashback|cash back|reversal credit|dividend credit|salary credit|payroll|stipend|interest credit|int\.pd/i.test(fullBlockText)) {
+          type = 'income';
+        } else if (prevBalance !== null && balance !== null) {
+          const diff = Math.round((balance - prevBalance) * 100) / 100;
+          if (Math.abs(Math.abs(diff) - finalAmount) < 0.05) {
+            type = diff > 0 ? 'income' : 'expense';
+          } else {
+            type = /cashback|deposit|salary|interest|credit|refund/i.test(fullBlockText) ? 'income' : 'expense';
+          }
+        } else {
+          type = /cashback|deposit|salary|interest|credit|refund/i.test(fullBlockText) ? 'income' : 'expense';
+        }
       } else {
         finalAmount = nums[0];
+        type = /cashback|deposit|salary|interest|credit|refund/i.test(fullBlockText) ? 'income' : 'expense';
       }
-    } else if (nums.length >= 1) {
-      finalAmount = nums[0];
-      if (
-        /\b(?:cr|credit|deposit)\b/.test(lowerLine) ||
-        /salary|payroll|stipend|dividend|interest|refund|cashback/i.test(line)
-      ) {
-        type = 'income';
-      } else {
-        type = 'expense';
-      }
+    }
+
+    if (balance !== null) {
+      prevBalance = balance;
     }
 
     if (finalAmount <= 0) continue;
 
-    // Clean description: strip amounts and common banking prefixes
-    let desc = postDateText;
-    for (const aStr of amountMatches) {
-      desc = desc.replace(aStr, '');
-    }
+    // Clean narration / description
+    let desc = fullBlockText;
+    desc = desc.replace(block.date, '');
+    desc = desc.replace(AMOUNT_REGEX, '');
     desc = desc
       .replace(/\b(?:UPI|NEFT|RTGS|IMPS|CARD|REF|CHQ|POS|TRANSFER|CHQ\/REF|NO\.)[0-9A-Za-z\-_]*\b/gi, '')
-      .replace(/[₹$€£,;|]+/g, ' ')
+      .replace(/\b[0-9]{10,20}\b/g, '') // remove pure digit account/UPI IDs
+      .replace(/\b\d{2}:\d{2}:\d{2}\b/g, '') // remove timestamps
+      .replace(/\b(?:Cr|Dr)\b/gi, '')
+      .replace(/[₹$€£,;|\-\/]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
-    const stdDate = normalizeDate(rawDate);
-    const category = autoCategorize(desc || 'Bank Transaction', type === 'income' ? 'Salary & Income' : null);
-
     transactions.push({
-      date: stdDate,
+      date: normalizeDate(block.date),
       description: desc || 'Bank Transaction',
       amount: Math.round(finalAmount * 100) / 100,
       type,
-      category,
+      category: autoCategorize(desc || 'Bank Transaction', type === 'income' ? 'Salary & Income' : null),
     });
   }
 
