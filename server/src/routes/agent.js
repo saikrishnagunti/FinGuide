@@ -4,6 +4,7 @@ import { agentClient } from '../services/agent-client.js';
 import { generateFallbackAudit } from '../services/audit-fallback.js';
 import { runFallbackReactAdvisor } from '../services/react-fallback.js';
 import { computeStatisticalForecast } from '../services/forecast-fallback.js';
+import { generateFallbackBudget } from '../services/budget-fallback.js';
 
 const router = Router();
 
@@ -280,29 +281,45 @@ router.post('/budget', async (req, res) => {
       'SELECT * FROM goals WHERE user_id = ? AND status = "active"'
     ).all(userId);
 
-    const parsedSnapshots = snapshots.map(s => ({
-      ...s,
-      income_data: JSON.parse(s.income_data),
-      expense_data: JSON.parse(s.expense_data),
-    }));
-
-    const result = await agentClient.proposeBudget({
-      user_context: { name: user.name, currency: user.currency || '₹' },
-      snapshots: parsedSnapshots,
-      transactions,
-      goals,
+    const parsedSnapshots = snapshots.map(s => {
+      let income_data = {};
+      let expense_data = {};
+      try { income_data = typeof s.income_data === 'string' ? JSON.parse(s.income_data) : (s.income_data || {}); } catch {}
+      try { expense_data = typeof s.expense_data === 'string' ? JSON.parse(s.expense_data) : (s.expense_data || {}); } catch {}
+      return {
+        ...s,
+        income_data,
+        expense_data,
+      };
     });
 
-    res.json(result);
+    try {
+      const result = await agentClient.proposeBudget({
+        user_context: { name: user.name, currency: user.currency || '₹' },
+        snapshots: parsedSnapshots,
+        transactions,
+        goals,
+      });
+      return res.json(result);
+    } catch (agentErr) {
+      console.warn('[AgentRoute] Python budget service unavailable:', agentErr.message, '— generating resilient statistical budget proposal.');
+      const fallbackResult = generateFallbackBudget({
+        user,
+        snapshots: parsedSnapshots,
+        transactions,
+        goals,
+      });
+      return res.json(fallbackResult);
+    }
   } catch (err) {
-    console.error('Agent budget error:', err);
-    res.status(502).json({ error: err.message || 'Budget generation failed' });
+    console.error('Agent budget fatal error:', err);
+    res.status(500).json({ error: err.message || 'Budget generation failed' });
   }
 });
 
 /**
  * POST /api/agent/forecast
- * Get AI-generated cash flow forecast.
+ * Get AI-generated cash flow forecast with resilient fallback.
  */
 router.post('/forecast', async (req, res) => {
   try {
@@ -316,22 +333,39 @@ router.post('/forecast', async (req, res) => {
       'SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC LIMIT 500'
     ).all(userId);
 
-    const parsedSnapshots = snapshots.map(s => ({
-      ...s,
-      income_data: JSON.parse(s.income_data),
-      expense_data: JSON.parse(s.expense_data),
-    }));
-
-    const result = await agentClient.forecast({
-      snapshots: parsedSnapshots,
-      transactions,
-      months_ahead: months_ahead || 3,
+    const parsedSnapshots = snapshots.map(s => {
+      let income_data = {};
+      let expense_data = {};
+      try { income_data = typeof s.income_data === 'string' ? JSON.parse(s.income_data) : (s.income_data || {}); } catch {}
+      try { expense_data = typeof s.expense_data === 'string' ? JSON.parse(s.expense_data) : (s.expense_data || {}); } catch {}
+      return {
+        ...s,
+        income_data,
+        expense_data,
+      };
     });
 
-    res.json(result);
+    try {
+      const result = await agentClient.forecast({
+        snapshots: parsedSnapshots,
+        transactions,
+        months_ahead: months_ahead || 3,
+      });
+      return res.json(result);
+    } catch (agentErr) {
+      console.warn('[AgentRoute] Python forecast service unavailable:', agentErr.message, '— using statistical fallback.');
+      const history = getUserMonthlyHistory(userId);
+      const statForecast = computeStatisticalForecast(history, months_ahead || 3, 'auto');
+      return res.json({
+        raw_text: `### 📈 Cash Flow Projections\n\nStatistical forecast generated based on ${history.length} months of verified historical data.`,
+        forecast: statForecast.forecast || [],
+        status: 'ok',
+        source: 'fallback_engine',
+      });
+    }
   } catch (err) {
     console.error('Agent forecast error:', err);
-    res.status(502).json({ error: err.message || 'Forecast failed' });
+    res.status(500).json({ error: err.message || 'Forecast failed' });
   }
 });
 
