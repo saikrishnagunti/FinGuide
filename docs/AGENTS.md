@@ -1,49 +1,57 @@
-# 🤖 Agent Instructions
+# 🤖 AGENTS.md
 
-<div align="center">
+> ![Build better, together.](https://img.shields.io/badge/Build_better,_together.-7E22CE?style=flat-square)
 
-![Agent Role](https://img.shields.io/badge/Agent_Role-Pair_Programming_Partner-7E22CE?style=for-the-badge&logo=probot&logoColor=white)
-![Stack](https://img.shields.io/badge/Stack-React_19_•_Node_•_FastAPI-00ABE4?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Active_Development-178582?style=for-the-badge)
-![Security](https://img.shields.io/badge/Security-Zero_Trust_OTP-E11D48?style=for-the-badge)
+# Agent Instructions
 
-<p><em>Guidelines, quality standards, and operational rules for AI coding assistants working in the FinGuide repository.</em></p>
-
-</div>
+Guidelines for AI coding agents working on this project.
 
 ---
 
-### 01 Purpose
+<table width="100%">
+<tr><td colspan="2">
 
-> [!NOTE]
-> **Welcome to FinGuide!** If you're an AI agent (Antigravity, Claude Code, Cursor, Copilot) helping build this project, this document is our team agreement. It explains how our three tiers connect, where files belong, and the rules we enforce to keep the code fast, accessible, and secure.
+### 01 &nbsp; Purpose
+
+This file is for AI agents (Claude Code, Cursor, Copilot, Antigravity) helping me build FinGuide. If you're an agent working in this repo — read this first. It'll save us both time.
+
+I built FinGuide as a three-tier financial intelligence platform: React 19 frontend, Node.js Express gateway, and a Python FastAPI AI agent. This doc explains how it all fits together and what rules I expect you to follow.
+
+</td></tr>
+</table>
 
 ---
 
 <table width="100%">
 <tr>
-<th width="50%" align="left">📖 02 Before You Start</th>
-<th width="50%" align="left">⚙️ 03 General Engineering Rules</th>
+<th width="50%" align="left">02 &nbsp; Before You Start</th>
+<th width="50%" align="left">03 &nbsp; General Rules</th>
 </tr>
 <tr>
 <td valign="top">
 
-- [ ] Read [**`PRD.md`**](PRD.md) to understand product requirements and user goals
-- [ ] Read [**`DESIGN_SYSTEM.md`**](DESIGN_SYSTEM.md) to use our actual color tokens
-- [ ] Read [**`ARCHITECTURE.md`**](ARCHITECTURE.md) to see how the 3 tiers communicate
-- [ ] Inspect existing components in `/frontend/src/components` before creating new ones
-- [ ] Inspect existing backend routes in `/server/src/routes` before writing duplicate logic
-- [ ] Check security rules in [**`SECURITY.md`**](SECURITY.md) before altering auth flows
+📖
+
+- [ ] Read [PRD.md](PRD.md) to understand the product and goals
+- [ ] Read [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for UI/UX guidelines
+- [ ] Read [ARCHITECTURE.md](ARCHITECTURE.md) for technical structure
+- [ ] Check existing components in `frontend/src/components/`
+- [ ] Understand the folder structure before adding files
+- [ ] Look at [SECURITY.md](SECURITY.md) before changing auth flows
 
 </td>
 <td valign="top">
 
-- [ ] **React 19 + Vite + Vanilla CSS tokens**: Never install TailwindCSS
-- [ ] **CSS Design Tokens**: Strictly use `var(--accent-primary)`, `var(--bg-dark)`
-- [ ] **Modular Code**: Keep components small, focused, and reusable
-- [ ] **Developer Comments**: Add quick notes explaining complex financial math
-- [ ] **SQL Safety**: Always parameterize database queries to prevent SQL injections
-- [ ] **Zero Hallucination**: Never delete files without confirming dependencies
+⚙️
+
+- [ ] Use React 19 + Vite + Vanilla CSS tokens (no Tailwind)
+- [ ] Follow the design system — use `var(--accent-primary)` etc.
+- [ ] Reuse existing components before creating new ones
+- [ ] Keep code modular and scalable
+- [ ] Write clean, readable code with descriptive names
+- [ ] Add comments for complex logic (especially financial math)
+- [ ] Don't create unnecessary files
+- [ ] Follow the project structure
 
 </td>
 </tr>
@@ -53,30 +61,36 @@
 
 <table width="100%">
 <tr>
-<th width="50%" align="left">💻 04 Code Guidelines</th>
-<th width="50%" align="left">🛡️ 05 Security & Best Practices</th>
+<th width="50%" align="left">04 &nbsp; Code Guidelines</th>
+<th width="50%" align="left">05 &nbsp; Security & Best Practices</th>
 </tr>
 <tr>
 <td valign="top">
 
-- [ ] Write clean functional components with modern React hooks
-- [ ] Give variables and functions descriptive, self-explanatory names
-- [ ] Never hardcode hex values like `#00ABE4` directly in JSX
-- [ ] Handle loading, empty, and error states gracefully in UI
-- [ ] Ensure layouts are responsive across mobile, tablet, and desktop
-- [ ] Write semantic, accessible markup with proper ARIA attributes
-- [ ] Always return cleanup functions in `useEffect` for listeners and intervals
+`</>`
+
+- [ ] Use functional components with React hooks
+- [ ] Use meaningful variable and function names
+- [ ] Prefer existing UI components over new ones
+- [ ] Keep components small and reusable
+- [ ] Follow the code style in [CODE_STYLE.md](CODE_STYLE.md)
+- [ ] Handle loading, error and empty states
+- [ ] Ensure responsiveness across breakpoints
+- [ ] Write accessible and semantic code
 
 </td>
 <td valign="top">
 
-- [ ] Never commit API keys, salts, or passwords to Git
-- [ ] Store all secrets in `.env` files and cloud environment dashboards
-- [ ] Validate all incoming payloads on both client and backend
-- [ ] Require Two-Step Email OTP for user registration and password resets
-- [ ] Enforce 15-minute lockout on 5 consecutive failed logins
-- [ ] Auto-logout idle sessions after 15 minutes of inactivity
-- [ ] Preserve user privacy: statements are parsed in-memory, never sold
+🛡️
+
+- [ ] Never expose API keys or sensitive data
+- [ ] Use environment variables (`.env`)
+- [ ] Validate all user inputs
+- [ ] Follow authentication and authorization rules
+- [ ] Implement error handling everywhere
+- [ ] Avoid hardcoding secrets
+- [ ] Follow the guidelines in [SECURITY.md](SECURITY.md)
+- [ ] Be mindful of data privacy and user safety
 
 </td>
 </tr>
@@ -86,37 +100,40 @@
 
 <table width="100%">
 <tr>
-<th width="50%" align="left">⚡ 06 Useful Commands</th>
-<th width="50%" align="left">💡 07 Need Help?</th>
+<th width="50%" align="left">06 &nbsp; Useful Commands</th>
+<th width="50%" align="left">07 &nbsp; Need Help?</th>
 </tr>
 <tr>
 <td valign="top">
+
+📋
 
 ```bash
-# 1. Run Python AI Agent (Port 8000)
+# Run the AI Agent (Port 8000)
 cd agent && uvicorn app.main:app --port 8000
 
-# 2. Run Node Express Gateway (Port 5000)
+# Run the Express Gateway (Port 5000)
 cd server && npm run dev
 
-# 3. Run React 19 Frontend (Port 5173)
+# Run the React Frontend (Port 5173)
 cd frontend && npm run dev
 
-# 4. Run Production Build Check
+# Production build check
 cd frontend && npm run build
 ```
 
 </td>
 <td valign="top">
 
-If you're unsure about how something should work:
-- Check the specifications in [**`/docs`**](./)
-- Look at existing working patterns in `/frontend/src`
-- Review existing routes in `/server/src/routes`
-- Ask for clarification before making huge architectural changes
+💡 If you're unsure about something:
+
+- Check the documentation in `/docs`
+- Look at existing code examples
+- Follow the patterns already in use
+- Ask for clarification before making big changes
 
 > [!TIP]
-> **Let's build something amazing together! 🚀**
+> Let's build something amazing! 🚀
 
 </td>
 </tr>

@@ -1,55 +1,62 @@
-# 💻 Code Style Guide
+# 💻 CODE_STYLE.md
 
-<div align="center">
+> ![Write clean code. Ship fast.](https://img.shields.io/badge/Write_clean_code._Ship_fast.-4338CA?style=flat-square)
 
-![Code Style](https://img.shields.io/badge/Code_Style-Clean_&_Defensive-4338CA?style=for-the-badge&logo=eslint&logoColor=white)
-![React](https://img.shields.io/badge/React-19_ESM-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Node](https://img.shields.io/badge/Node.js-20_LTS-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.11_FastAPI-3776AB?style=for-the-badge&logo=python&logoColor=white)
+# Code Style Guide
 
-<p><em>Engineering standards, naming conventions, and best practices across the FinGuide codebase.</em></p>
-
-</div>
+How I write code in this project. If you're an agent helping out, follow these patterns.
 
 ---
 
-### 01 Engineering Philosophy
+<table width="100%">
+<tr><td colspan="2">
 
-| Principle | Practical Engineering Implementation |
+### 01 &nbsp; Engineering Philosophy
+
+I like code that's easy to read and hard to break. Here's the mindset:
+
+| Principle | What it means in practice |
 | :--- | :--- |
-| **📖 Clarity Over Cleverness** | Write readable, self-describing code. Avoid compressed, complex one-liners when a clear 3-line block is easier to debug and test. |
-| **🛡️ Defensive Boundaries** | Never trust client input or raw third-party data. Validate payloads using Pydantic in Python and schema checks in Express. |
-| **✨ Zero UI Slop** | Internal framework terms (e.g. `sqlite3`, `sql.js`, `FastAPI error`, `gemini-3.5-flash-lite`) must **never** be exposed in end-user error toasts or UI copy. |
-| **♻️ Reusability & DRY** | Reuse established components in `frontend/src/components` and utilities in `server/src/services` before creating new files. |
+| 📖 **Clarity over cleverness** | Write readable code. If a 3-line block is clearer than a one-liner, use 3 lines. |
+| 🛡️ **Defensive boundaries** | Never trust client input. Validate everything — Pydantic on Python side, schema checks on Express. |
+| ✨ **Zero UI slop** | Internal terms like `sqlite3`, `FastAPI error`, or `gemini-3.5-flash-lite` should never appear in user-facing toasts. |
+| ♻️ **Reuse, don't reinvent** | Check `frontend/src/components/` and `server/src/services/` before creating new files. |
+
+</td></tr>
+</table>
 
 ---
 
 <table width="100%">
 <tr>
-<th width="50%" align="left">⚛️ 02 React & JavaScript Conventions</th>
-<th width="50%" align="left">🐍 03 Python & FastAPI Conventions</th>
+<th width="50%" align="left">02 &nbsp; React & JavaScript Conventions</th>
+<th width="50%" align="left">03 &nbsp; Python & FastAPI Conventions</th>
 </tr>
 <tr>
 <td valign="top">
 
-- [x] **ES Modules**: `import/export` syntax across all frontend and Node files
-- [x] **Functional Components**: Clean JSX components with modern React hooks
-- [x] **State Immutability**: Always spread state objects and arrays (`[...prev]`)
-- [x] **Lifecycle Safety**: Proper cleanup return functions in `useEffect`
-- [x] **Component Naming**: `PascalCase.jsx` for components and pages
-- [x] **Service Naming**: `kebab-case.js` for backend utilities
-- [x] **Zero Hardcoded Colors**: Strictly use `var(--accent-primary)`
+⚛️
+
+- [x] ES Modules — `import/export` across all files
+- [x] Functional components with modern React hooks
+- [x] Immutable state updates — always spread (`[...prev]`)
+- [x] Cleanup return in `useEffect` for listeners and timers
+- [x] `PascalCase.jsx` for components and pages
+- [x] `kebab-case.js` for backend utilities
+- [x] No hardcoded hex values — use `var(--accent-primary)`
 
 </td>
 <td valign="top">
 
-- [x] **PEP 8 Compliance**: 4-space indentation, snake_case identifiers
-- [x] **Type Annotations**: Enforce type hints on all function signatures
-- [x] **Pydantic Schemas**: Validate all request/response models strictly
-- [x] **Async Handlers**: Use `async def` for FastAPI route handlers
-- [x] **Defensive PDF Parsing**: Gracefully handle malformed bank statement tables
-- [x] **Tool Isolation**: Agent tools organized cleanly under `agent/app/`
-- [x] **Disclaimers**: Attach financial disclaimers to generated advice
+🐍
+
+- [x] PEP 8 — 4-space indentation, `snake_case` names
+- [x] Type annotations on all function signatures
+- [x] Pydantic schemas for request/response validation
+- [x] `async def` for FastAPI route handlers
+- [x] Graceful handling of malformed PDF tables
+- [x] Agent tools organized under `agent/app/`
+- [x] Financial disclaimers attached to generated advice
 
 </td>
 </tr>
@@ -59,26 +66,30 @@
 
 <table width="100%">
 <tr>
-<th width="50%" align="left">🎨 04 CSS Design Tokens</th>
-<th width="50%" align="left">🗄️ 05 Database & SQL Conventions</th>
+<th width="50%" align="left">04 &nbsp; CSS Design Tokens</th>
+<th width="50%" align="left">05 &nbsp; Database & SQL Conventions</th>
 </tr>
 <tr>
 <td valign="top">
 
-- [x] **No TailwindCSS**: Rely on custom tokens in `frontend/src/index.css`
-- [x] **Token References**: Use `var(--accent-primary)`, `var(--bg-card)`, etc.
-- [x] **8px Spatial Grid**: Use `var(--space-sm)`, `var(--space-md)`, etc.
-- [x] **Dark Mode Variables**: Centralized variables on `:root` and `[data-theme]`
-- [x] **Tabular Numbers**: Apply `tabular-nums` for currency figures in tables
+🎨
+
+- [x] No TailwindCSS — custom tokens in `frontend/src/index.css`
+- [x] Reference tokens: `var(--accent-primary)`, `var(--bg-card)`
+- [x] 8px spatial grid: `var(--space-sm)`, `var(--space-md)`, etc.
+- [x] Centralized dark mode variables on `:root`
+- [x] `tabular-nums` for currency figures in tables
 
 </td>
 <td valign="top">
 
-- [x] **Parameterized Queries**: Always bind query parameters to prevent SQLi
-- [x] **Turso Cloud Replication**: Sync state changes immediately with `saveDatabase()`
-- [x] **Snake Case Columns**: `created_at`, `password_hash`, `locked_until`
-- [x] **Transactions**: Wrap multi-table bulk updates in explicit transactions
-- [x] **Defensive Fallback**: Keep local in-memory SQLite mirror ready if cloud disconnects
+🗄️
+
+- [x] Parameterized queries to prevent SQL injection
+- [x] Sync changes to Turso Cloud with `saveDatabase()`
+- [x] Snake case columns: `created_at`, `password_hash`
+- [x] Wrap multi-table updates in explicit transactions
+- [x] Local SQLite mirror as fallback if cloud disconnects
 
 </td>
 </tr>

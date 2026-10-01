@@ -1,125 +1,93 @@
-# 🚀 Deployment & Cloud Architecture
+# 🚀 DEPLOYMENT.md
 
-<div align="center">
+> ![Ship it. Scale it.](https://img.shields.io/badge/Ship_it._Scale_it.-0369A1?style=flat-square)
 
-![Deploy](https://img.shields.io/badge/Deployment-Production_Ready-0369A1?style=for-the-badge&logo=render&logoColor=white)
-![Frontend](https://img.shields.io/badge/Frontend-Vercel_Edge-000000?style=for-the-badge&logo=vercel&logoColor=white)
-![Backend](https://img.shields.io/badge/Backend-Render_Web_Services-46E3B7?style=for-the-badge&logo=render&logoColor=white)
-![Database](https://img.shields.io/badge/Database-Turso_Cloud_libSQL-4FF8D2?style=for-the-badge&logo=sqlite&logoColor=black)
-![Email](https://img.shields.io/badge/Email-Brevo_HTTPS_API-0B99FF?style=for-the-badge)
+# Deployment & Cloud Architecture
 
-<p><em>Production hosting, database isolation, GitHub security guarantees, and secret management.</em></p>
-
-</div>
+How I deploy FinGuide to production and manage secrets across services.
 
 ---
 
-### 01 Cloud Data Isolation & GitHub Security
+### 01 &nbsp; Cloud Data Isolation
 
 > [!IMPORTANT]
-> **❓ If someone pulls this project from my GitHub, will they have access to my cloud data?**
+> **"If someone clones my repo, can they access my data?"**
 >
-> **NO, NEVER.** Anyone cloning your public or private GitHub repository has **0% access** to your production cloud database, user records, or secrets.
+> **No.** GitHub only has source code. Your database, user records, and API keys live exclusively in your cloud provider dashboards (Render, Vercel, Turso). They're never committed to Git.
 
-| Security Pillar | Technical Protection Mechanism |
+| Pillar | How it's protected |
 | :--- | :--- |
-| 📂 **Source Code $\neq$ Live Database** | GitHub stores only application code (React components, Express routes, Python logic). It **never** contains running databases, user records, or sessions. |
-| 🔑 **Zero Secrets in Git** | Database connection strings, JWT secret keys, and API tokens live **exclusively** inside private cloud provider environment variables (Render, Vercel). They are never committed to Git. |
-| 🛡️ **Encrypted Cloud Connections** | Cloud databases enforce TLS 1.3 encryption, token authentication, and private network bindings against unauthorized outside access. |
-| 🚫 **Strict `.gitignore` Enforcement** | All `.env`, `*.db`, `*.sqlite`, `data/`, and uploaded PDFs are blocked from version control. |
+| 📂 **Code ≠ Data** | GitHub has React components, Express routes, Python logic. Never databases or user records. |
+| 🔑 **Zero secrets in Git** | Connection strings, JWT keys, API tokens — all live in Render/Vercel env vars. |
+| 🛡️ **Encrypted connections** | Turso enforces TLS 1.3 + token auth. No unauthorized access. |
+| 🚫 **`.gitignore` enforced** | `.env`, `*.db`, `*.sqlite`, `data/`, uploaded PDFs — all blocked from version control. |
 
 ---
 
-### 02 Database Architecture: Local vs. Production Cloud
+### 02 &nbsp; Local vs. Production Database
 
-| Feature | Local Dev (SQLite) | Production (Turso Cloud libSQL) | Alternative (Supabase Postgres) |
-| :--- | :--- | :--- | :--- |
-| **Storage Location** | `server/data/finguide.db` | Dedicated Managed libSQL Cloud | Managed Postgres Cluster |
-| **Concurrent Users** | Single-user testing | Thousands (Edge replication) | Thousands (Connection pooling) |
-| **Stateless Serverless Support**| ⚠️ Ephemeral on restart | ✅ Fully stateless & persistent | ✅ Fully stateless & persistent |
-| **Automated Backups** | Manual file copy | ✅ Point-in-time recovery & snapshots | ✅ Daily cloud backups |
-| **Free Tier Durability** | N/A | ✅ Never shuts down, zero volume fees | ⚠️ Pauses after 7 days of inactivity |
-| **Recommended For** | Local testing & offline demo | **Active Production Default** | Enterprise Postgres installations |
+| | Local Dev (SQLite) | Production (Turso Cloud) |
+| :--- | :--- | :--- |
+| **Storage** | `server/data/finguide.db` | Managed libSQL Cloud |
+| **Concurrent users** | Single user | Thousands (edge replication) |
+| **Persistence** | ⚠️ Lost on restart | ✅ Always persistent |
+| **Backups** | Manual | ✅ Point-in-time recovery |
+| **Free tier** | N/A | ✅ Never pauses |
 
 ---
 
-### 03 Production Cloud Topology
+### 03 &nbsp; Production Topology
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Client Devices"]
-        Browser["👤 Web & Mobile Browser"]
-    end
-
-    subgraph Vercel ["Frontend Hosting (Vercel)"]
-        SPA["React 19 + Vite SPA<br/>(Edge Global CDN)"]
-    end
-
-    subgraph Render ["Backend Services (Render)"]
-        Gateway["⚙️ Node.js Express Gateway<br/>(JWT Auth, Rate Limiting, CORS)"]
-        Agent["🤖 Python FastAPI AI Agent<br/>(Gemini 3.5 Flash Lite + ARIMA)"]
-    end
-
-    subgraph CloudServices ["Managed Cloud Services"]
-        Turso[("☁️ Turso Cloud Database<br/>(libSQL Edge Persistence)")]
-        Brevo["📧 Brevo Email API<br/>(HTTPS Port 443 OTP Delivery)"]
-        Gemini["🧠 Google AI Studio<br/>(Gemini 3.5 Flash Lite)"]
-    end
-
-    Browser -->|HTTPS| SPA
-    SPA -->|REST API / JSON| Gateway
-    Gateway -->|Private Network| Agent
-    Gateway -->|libSQL over TLS| Turso
-    Gateway -->|HTTPS API| Brevo
-    Agent -->|REST API| Gemini
+    Browser["👤 Browser"] --> Vercel["💻 Vercel CDN\nReact 19 SPA"]
+    Vercel -->|"REST API"| Gateway["⚙️ Render\nNode.js Express"]
+    Gateway -->|"Private Network"| Agent["🤖 Render\nPython FastAPI"]
+    Gateway -->|"libSQL/TLS"| Turso["☁️ Turso Cloud\nDatabase"]
+    Gateway -->|"HTTPS API"| Brevo["📧 Brevo\nEmail OTP"]
+    Agent -->|"REST API"| Gemini["🧠 Google AI\nGemini 3.5"]
 ```
 
 ---
 
-### 04 Secrets & Environment Variables Management
+### 04 &nbsp; Environment Variables
 
-Configure these variables directly inside your cloud platform's **Settings > Environment Variables** dashboard. They are injected at container startup and never written to code repositories.
+Set these in your cloud provider's **Settings > Environment Variables** dashboard. Never put them in code.
 
-#### Node Gateway (`server`) — Render Environment Variables
+**Node Gateway (`server`) — Render**
 
-| Variable Name | Required? | Recommended Setting | Purpose |
-| :--- | :---: | :--- | :--- |
-| `NODE_ENV` | **Yes** | `production` | Enables production optimizations and strips internal debug error traces. |
-| `SECRET_KEY` | **Yes** | *Generate 64-char random hex* | Cryptographic salt used for signing and verifying user JWT tokens. |
-| `CORS_ORIGIN` | **Yes** | `https://fin-guide-gamma.vercel.app` | Whitelists your production frontend domain to prevent unauthorized origins. |
-| `TURSO_DATABASE_URL` | **Yes** | `libsql://your-db-name.turso.io` | Live cloud database connection URL. |
-| `TURSO_AUTH_TOKEN` | **Yes** | `eyJhbGciOi...` | Cloud database authentication token. |
-| `AGENT_SERVICE_URL` | **Yes** | `https://finguide-agent.onrender.com` | Internal or public URL pointing to the running Python agent service. |
-| `BREVO_API_KEY` | **Yes** | `xkeysib-...` | Brevo API key for delivering authentication OTP emails over HTTPS. |
-| `SMTP_USER` | Optional | `your-email@gmail.com` | Verified sender email used as default header in Brevo emails. |
+| Variable | Required | Purpose |
+| :--- | :---: | :--- |
+| `NODE_ENV` | ✅ | `production` — enables optimizations |
+| `SECRET_KEY` | ✅ | 64-char random hex for JWT signing |
+| `CORS_ORIGIN` | ✅ | Your Vercel frontend URL |
+| `TURSO_DATABASE_URL` | ✅ | `libsql://your-db.turso.io` |
+| `TURSO_AUTH_TOKEN` | ✅ | Turso database auth token |
+| `AGENT_SERVICE_URL` | ✅ | URL to your running Python agent |
+| `BREVO_API_KEY` | ✅ | Brevo key for OTP email delivery |
+| `SMTP_USER` | Optional | Sender email for Brevo |
 
-> [!NOTE]
-> **Variables you can safely remove from Render:**
-> - `DATABASE_PATH`: Redundant (defaults automatically to `./data/finguide.db`).
-> - `RESEND_API_KEY`: FinGuide uses Brevo HTTPS API (`BREVO_API_KEY`).
-> - `SMTP_PASS`: Render blocks outbound SMTP ports 25, 465, and 587. All emails are sent via Brevo HTTPS API (port 443).
+**AI Agent (`agent`) — Render**
 
-#### AI Agent Service (`agent`) — Render Environment Variables
+| Variable | Required | Purpose |
+| :--- | :---: | :--- |
+| `GEMINI_API_KEY` | ✅ | Google AI Studio API key |
+| `GEMINI_MODEL` | Optional | Defaults to `gemini-3.5-flash-lite` |
 
-| Variable Name | Required? | Recommended Setting | Purpose |
-| :--- | :---: | :--- | :--- |
-| `GEMINI_API_KEY` | **Yes** | `AIzaSy...` (Google AI Studio) | Authenticates with Google AI Studio for Gemini 3.5 Flash Lite. |
-| `GEMINI_MODEL` | Optional | `gemini-3.5-flash-lite` | Specifies primary reasoning model engine. |
+**Frontend (`frontend`) — Vercel**
 
-#### Frontend (`frontend`) — Vercel Environment Variables
-
-| Variable Name | Required? | Recommended Setting | Purpose |
-| :--- | :---: | :--- | :--- |
-| `VITE_API_URL` | **Yes** | `https://finguide-api.onrender.com` | Directs React Axios/fetch requests to your live Node gateway. |
+| Variable | Required | Purpose |
+| :--- | :---: | :--- |
+| `VITE_API_URL` | ✅ | Your live Node gateway URL |
 
 ---
 
-### 05 Step-by-Step Production Launch Workflow
+### 05 &nbsp; Step-by-Step Launch
 
-| Step | Action | Practical Guidance |
+| Step | Action | Details |
 | :---: | :--- | :--- |
-| **1** | **Push Clean Codebase to GitHub** | Verify `.gitignore` is active. Run `git push origin main`. Only clean application source files are uploaded. |
-| **2** | **Set Up Turso Cloud Database** | Create a database at [turso.tech](https://turso.tech). Copy the `libsql://` database URL and generate an auth token. |
-| **3** | **Deploy Python Agent on Render** | Create a New Web Service. Root: `agent`. Build: `pip install -r requirements.txt`. Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Add `GEMINI_API_KEY`. |
-| **4** | **Deploy Express Gateway on Render** | Create a New Web Service. Root: `server`. Build: `npm install`. Start: `node src/index.js`. Add Turso, Brevo, and Secret Key environment variables. |
-| **5** | **Deploy React Frontend on Vercel** | Import repo into Vercel. Root: `frontend`. Set `VITE_API_URL` to your live Node API URL. Click Deploy. |
+| **1** | Push to GitHub | Make sure `.gitignore` is active. `git push origin main`. |
+| **2** | Set up Turso | Create a DB at [turso.tech](https://turso.tech). Copy the `libsql://` URL and generate a token. |
+| **3** | Deploy AI Agent on Render | Root: `agent`. Build: `pip install -r requirements.txt`. Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Add `GEMINI_API_KEY`. |
+| **4** | Deploy Gateway on Render | Root: `server`. Build: `npm install`. Start: `node src/index.js`. Add all env vars from table above. |
+| **5** | Deploy Frontend on Vercel | Import repo. Root: `frontend`. Set `VITE_API_URL`. Click Deploy. |

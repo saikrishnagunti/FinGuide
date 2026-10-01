@@ -1,92 +1,72 @@
-# 🏛️ System Architecture
+# 🏛️ ARCHITECTURE.md
 
-<div align="center">
+> ![Big picture. Clear structure. Scalable.](https://img.shields.io/badge/Big_picture._Clear_structure._Scalable.-0369A1?style=flat-square)
 
-![Topology](https://img.shields.io/badge/Architecture-Three--Tier_Microservices-00ABE4?style=for-the-badge&logo=diagramsdotnet&logoColor=white)
-![Frontend](https://img.shields.io/badge/Frontend-React_19_SPA-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Gateway](https://img.shields.io/badge/Gateway-Express_Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![AI Engine](https://img.shields.io/badge/AI_Engine-FastAPI_•_Gemini_3.5-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Database](https://img.shields.io/badge/Database-Turso_Cloud_libSQL-4FF8D2?style=for-the-badge&logo=sqlite&logoColor=black)
+# Architecture
 
-<p><em>High-level overview of FinGuide's distributed three-tier architecture, data pipeline, and cloud topology.</em></p>
-
-</div>
+High-level overview of how FinGuide is structured, what tech I'm using, and how everything connects.
 
 ---
 
-### 01 System Overview
+### 01 &nbsp; System Overview
+
+A visual overview of how the application works and the main services involved.
 
 ```mermaid
 flowchart LR
-    subgraph Client ["Client Presentation"]
-        Browser["👤 Web & Mobile Browser"]
-    end
-
-    subgraph FrontendTier ["Tier 1: Frontend SPA"]
-        ReactApp["💻 React 19 + Vite<br/>• Vanilla CSS Design Tokens<br/>• Session Guard & Inactivity Timer<br/>(Hosted on Vercel CDN)"]
-    end
-
-    subgraph GatewayTier ["Tier 2: API Gateway"]
-        ExpressApp["⚙️ Node.js Express Gateway<br/>• JWT Authentication & Bcrypt<br/>• Helmet Security & Rate Limiting<br/>• Audit Logging Trail<br/>(Hosted on Render)"]
-    end
-
-    subgraph AgentTier ["Tier 3: AI Intelligence Engine"]
-        FastAPIApp["🤖 Python FastAPI Service<br/>• pdfplumber Statement Parser<br/>• statsmodels ARIMA Forecasts<br/>• ReAct Reasoning Loop<br/>(Hosted on Render)"]
-    end
-
-    subgraph ExternalCloud ["Managed Cloud Infrastructure"]
-        TursoDB[("☁️ Turso Cloud Database<br/>(libSQL Edge Persistence)")]
-        BrevoAPI["📧 Brevo Email API<br/>(HTTPS Port 443 OTPs)"]
-        GeminiAI["🧠 Google AI Studio<br/>(Gemini 3.5 Flash Lite)"]
-    end
-
-    Browser -->|HTTPS REST| ReactApp
-    ReactApp -->|REST API / JSON| ExpressApp
-    ExpressApp -->|Internal HTTP| FastAPIApp
-    ExpressApp -->|libSQL over TLS| TursoDB
-    ExpressApp -->|HTTPS API| BrevoAPI
-    FastAPIApp -->|REST API| GeminiAI
+    Browser["👤 Client\n(Web / Mobile)"] --> Frontend["💻 Frontend\nReact 19\nVanilla CSS"]
+    Frontend -->|"API requests (HTTPS)"| Gateway["⚙️ Backend & APIs\nNode.js Express\n(Auth, DB, Proxy)"]
+    Gateway -->|"Responses (JSON)"| Frontend
+    Gateway --> Turso["☁️ Database\nTurso Cloud"]
+    Gateway --> Brevo["📧 Emails\nBrevo API"]
+    Gateway --> Agent["🤖 AI Agent\nPython FastAPI"]
+    Agent --> Gemini["🧠 LLM\nGemini 3.5"]
 ```
 
 ---
 
 <table width="100%">
 <tr>
-<th width="50%" align="left">⚙️ 02 Tech Stack</th>
-<th width="50%" align="left">📂 03 Project Structure</th>
+<th width="50%" align="left">02 &nbsp; Tech Stack</th>
+<th width="50%" align="left">03 &nbsp; Project Structure</th>
 </tr>
 <tr>
 <td valign="top">
 
-| Layer | Technologies | Primary Role |
-| :--- | :--- | :--- |
-| **Frontend** | React 19, Vite, Vanilla CSS | Single Page App, responsive dashboard, charts |
-| **Gateway** | Node.js 20+, Express, Helmet | Route dispatch, JWT auth, rate limiting |
-| **Database** | Turso Cloud libSQL + SQLite | Cloud persistence, local failover replication |
-| **AI Agent** | Python 3.11+, FastAPI | ReAct reasoning, spending diagnostics |
-| **LLM** | Gemini 3.5 Flash Lite | Grounded advice & natural language chat |
-| **Parser** | `pdfplumber` + regex | Deterministic bank statement extraction |
-| **Forecast** | `statsmodels` (ARIMA/SARIMA) | Algorithmic forward cash-flow projection |
-| **Email** | Brevo HTTPS API (Port 443) | Transactional OTP delivery worldwide |
+Tools and technologies used in the project.
+
+| | Layer | Stack |
+| :---: | :--- | :--- |
+| 💻 | **Frontend** | React 19, Vite, Vanilla CSS |
+| ⚙️ | **Backend** | Node.js, Express, Helmet |
+| 🗄️ | **Database** | Turso Cloud (libSQL), SQLite |
+| 🔑 | **Authentication** | JWT, Bcrypt, Email OTP |
+| 🤖 | **AI Agent** | Python FastAPI, pdfplumber |
+| 🧠 | **LLM** | Google Gemini 3.5 Flash Lite |
+| 📈 | **Forecasting** | statsmodels (ARIMA/SARIMA) |
+| 📧 | **Email** | Brevo HTTPS API |
+| 🚀 | **Deployment** | Vercel, Render |
 
 </td>
 <td valign="top">
 
+A simplified view of the folder structure.
+
 ```
 FinGuide/
 ├── frontend/          # React 19 SPA (Vercel)
-│   ├── src/components/ # Reusable UI components
-│   ├── src/pages/      # Dashboard, Upload, Advisor...
-│   └── src/index.css   # Complete design token system
+│   ├── src/components/  # Reusable UI components
+│   ├── src/pages/       # Dashboard, Upload, Advisor
+│   └── src/index.css    # Design token system
 ├── server/            # Node Express Gateway (Render)
-│   ├── src/routes/     # Auth, IE, Goals, Proxy
-│   ├── src/services/   # Brevo email, Security, Agent
-│   └── src/database.js # Turso cloud sync engine
+│   ├── src/routes/      # Auth, IE, Goals, Proxy
+│   ├── src/services/    # Email, Security, Agent
+│   └── src/database.js  # Turso cloud sync engine
 ├── agent/             # Python FastAPI (Render)
-│   ├── app/main.py     # FastAPI endpoints
-│   ├── app/pdf_parser.py # Statement extraction
+│   ├── app/main.py      # FastAPI endpoints
+│   ├── app/pdf_parser.py  # Statement extraction
 │   └── app/react_agent.py # ReAct reasoning loop
-└── docs/              # Official repository docs
+└── docs/              # Project documentation
 ```
 
 </td>
@@ -97,26 +77,34 @@ FinGuide/
 
 <table width="100%">
 <tr>
-<th width="50%" align="left">🔄 04 End-to-End Data Flow</th>
-<th width="50%" align="left">🚀 05 Scalability & Future Roadmap</th>
+<th width="50%" align="left">04 &nbsp; Data Flow</th>
+<th width="50%" align="left">05 &nbsp; Scalability & Future Considerations</th>
 </tr>
 <tr>
 <td valign="top">
 
-1. **User Ingestion**: User uploads a bank statement PDF or CSV via the frontend dropzone.
-2. **Gateway Dispatch**: The Express gateway validates authentication, attaches the user context, and streams the file to the Python service.
-3. **Deterministic Extraction**: `pdfplumber` extracts table bounding boxes and normalizes transaction balances.
-4. **Cloud Replication**: Normalized records are saved to SQLite and synchronized to **Turso Cloud** in real-time.
-5. **AI Advisory Review**: When the user asks for guidance, the agent retrieves ledger history, calls Gemini 3.5 Flash Lite, and returns interactive action approval cards.
+How data moves through the application.
+
+&ensp; ① &ensp; User uploads a bank statement via the frontend dropzone.
+
+&ensp; ② &ensp; Express gateway validates auth and streams the file to the Python agent.
+
+&ensp; ③ &ensp; `pdfplumber` extracts transactions and normalizes balances.
+
+&ensp; ④ &ensp; Records are saved locally and synced to **Turso Cloud** in real time.
+
+&ensp; ⑤ &ensp; When the user asks for advice, the AI agent pulls their history and responds with action cards.
 
 </td>
 <td valign="top">
 
-- ✅ **Decoupled Architecture**: Frontend, Gateway, and AI Agent scale independently on dedicated containers.
-- ✅ **Stateless Restarts**: Real-time replication to **Turso Cloud (libSQL)** ensures complete data durability across server restarts.
-- ✅ **High-Performance Caching**: Pre-calculated monthly financial metrics reduce redundant database reads.
-- ✅ **Asynchronous Batch Queues**: Pluggable worker queues (BullMQ/Celery) ready for high-volume statement processing.
-- ✅ **Zero-Trust Security**: Per-user encrypted storage with comprehensive audit logging for all authentication events.
+Key areas to consider as the product grows.
+
+- ✅ &ensp; Use modular architecture for easy feature addition.
+- ✅ &ensp; Implement caching for better performance.
+- ✅ &ensp; Set up background jobs for long-running tasks.
+- ✅ &ensp; Monitor usage and set up alerts.
+- ✅ &ensp; Consider multi-region deployment as user base grows.
 
 </td>
 </tr>

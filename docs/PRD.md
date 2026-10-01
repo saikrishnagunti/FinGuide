@@ -1,59 +1,56 @@
-# 📄 Product Requirements Document (PRD)
+# 📋 PRD.md
 
-<div align="center">
+> ![Turn ideas into products.](https://img.shields.io/badge/Turn_ideas_into_products.-7E22CE?style=flat-square)
 
-![Product](https://img.shields.io/badge/Product-FinGuide-7E22CE?style=for-the-badge&logo=target&logoColor=white)
-![Vision](https://img.shields.io/badge/Vision-AI_Wealth_OS-00ABE4?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Production_Ready-178582?style=for-the-badge)
+# Product Requirements Document
 
-<p><em>Product strategy, target personas, core feature specifications, and success benchmarks.</em></p>
-
-</div>
+A clear plan for what I'm building, why it matters, and how I'll make it happen.
 
 ---
 
-### 01 Product Overview
+### 01 &nbsp; Product Overview
 
-| Property | Details |
+| | |
 | :--- | :--- |
-| **Product Name** | **FinGuide — AI Financial Intelligence & Wealth OS** |
-| **Tagline** | Autonomous personal financial advisory, bank statement verification, and predictive wealth forecasting powered by AI. |
-| **Mission** | Bridge the gap between raw, opaque bank statements and actionable wealth building by combining deterministic parsing, statistical modeling (ARIMA/SARIMA), and Gemini 3.5 Flash Lite reasoning. |
-| **Core Values** | 100% User Privacy &bull; Zero Intrusive Banking Logins &bull; Human-in-the-Loop Decision Governance. |
+| **Product Name** | FinGuide — AI Financial Intelligence & Wealth OS |
+| **Tagline** | Get complete financial clarity in under 2 minutes. |
+| **Description** | An AI-powered platform that lets users upload bank statements, get instant spending analysis, cash flow forecasts, and personalized financial advice — without sharing bank passwords or sacrificing privacy. |
 
 ---
 
-### 02 Problem & Goal
+### 02 &nbsp; Problem
 
-> [!WARNING]
-> **The Problem with Modern Personal Finance Tools:**
-> Managing finances today is tedious and anxiety-inducing. Spreadsheets require manual data entry that users abandon within weeks. Aggregators demand intrusive online banking passwords that privacy-conscious individuals refuse to grant. Furthermore, traditional budgeting apps display passive historical charts without answering forward-looking questions like *"Can I afford a ₹50,000 expense in 3 months without compromising my emergency fund?"*
+Managing money today is frustrating. Spreadsheets need too much manual work and people give up after a week. Aggregator apps demand your bank password, which feels sketchy. And most budgeting tools just show you what you already spent — they don't help you plan ahead.
 
-> [!NOTE]
-> **The FinGuide Solution & Goal:**
-> Deliver complete, actionable financial clarity in **under 2 minutes** by allowing users to drag & drop their bank statements, review verified transactions with complete privacy, and receive grounded AI guidance where the user always maintains final approval.
+Nobody answers the real questions like *"Can I afford a ₹50,000 purchase in 3 months without hurting my emergency fund?"*
+
+---
+
+### 03 &nbsp; Goal
+
+Help users go from raw bank statement → complete financial picture in **under 2 minutes**. Just drag & drop your PDF, verify the transactions, and get honest AI advice. No bank login needed. You stay in control.
 
 ---
 
 <table width="100%">
 <tr>
-<th width="50%" align="left">👥 03 Target Personas</th>
-<th width="50%" align="left">💬 04 User Voice & Core Need</th>
+<th width="55%" align="left">04 &nbsp; Target Users</th>
+<th width="45%" align="left"></th>
 </tr>
 <tr>
 <td valign="top">
 
-- **Salaried Professionals**: Want automatic transaction categorization, savings rate calculation, and zero spreadsheet upkeep.
-- **Freelancers & Contractors**: Require forward cash flow projections to navigate irregular monthly invoices and buffer emergency reserves.
-- **Couples & Households**: Need shared milestone tracking, debt payoff roadmaps, and realistic expense targets.
-- **Privacy-Conscious Savers**: Demand tools that parse statements locally without demanding bank passwords or selling data.
+- **Salaried professionals** — want auto-categorized spending and savings rate
+- **Freelancers & contractors** — need cash flow projections for irregular income
+- **Couples & households** — track shared goals and debt payoff together
+- **Privacy-conscious savers** — want analysis without handing over bank credentials
 
 </td>
 <td valign="top">
 
-> *"I want a smart financial companion that analyzes my actual bank statements, gives me honest advice about my spending habits, and helps me plan purchases — without selling my data or asking for my bank password."*
+> 👤 **User Need**
 >
-> — **Target User Feedback**
+> *"I want a smart financial companion that analyzes my actual bank statements, gives me honest advice, and helps me plan purchases — without selling my data or asking for my bank password."*
 
 </td>
 </tr>
@@ -61,25 +58,26 @@
 
 ---
 
-### 05 Core Features Matrix
+### 05 &nbsp; Core Features
 
-| Feature Module | Visual Icon | User Capabilities | Underlying Technology |
-| :--- | :---: | :--- | :--- |
-| **Statement Upload** | 📄 | Drag & drop PDF or CSV statements from major banks with instant validation | `pdfplumber` + regex pattern matcher |
-| **Financial Audit** | 📊 | Automatic spending categorization, 50/30/20 benchmark scoring, and health metrics | Express Gateway + SQLite computation |
-| **Cash Flow Forecast** | 📈 | Algorithmic forward projections of account balances and safety runway | `statsmodels` (ARIMA / SARIMA / ETS) |
-| **AI Advisor Copilot** | 🤖 | Conversational financial advice grounded in user transaction history | Google Gemini 3.5 Flash Lite + ReAct loop |
-| **Action Approvals** | 🛡️ | Human-in-the-loop confirmation cards; AI cannot modify data without permission | React 19 interactive confirmation drawers |
-| **Zero-Trust Security** | 🔒 | 2-step email OTP verification, 15m brute force lockout, and idle session auto-logout | Brevo HTTPS API + Bcrypt + Helmet |
+<table>
+<tr>
+<td align="center">📄<br/><strong>Statement Upload</strong><br/><sub>Drag & drop PDF/CSV<br/>from any major bank</sub></td>
+<td align="center">📊<br/><strong>Financial Audit</strong><br/><sub>Auto-categorize spending<br/>50/30/20 benchmark</sub></td>
+<td align="center">📈<br/><strong>Cash Flow Forecast</strong><br/><sub>ARIMA-based forward<br/>balance projections</sub></td>
+<td align="center">🤖<br/><strong>AI Advisor</strong><br/><sub>Conversational advice<br/>grounded in your data</sub></td>
+<td align="center">🛡️<br/><strong>Action Approvals</strong><br/><sub>Human-in-the-loop<br/>confirmation cards</sub></td>
+</tr>
+</table>
 
 ---
 
-### 06 Success Metrics & Key Performance Indicators (KPIs)
+### 06 &nbsp; Success Metrics
 
-| Metric | Target Benchmark | How We Measure Success |
+| Metric | Target | How I'll measure it |
 | :--- | :---: | :--- |
-| **Statement Extraction Accuracy** | `≥ 98.5%` | Accurate transaction row parsing across diverse bank statement PDF layouts |
-| **Time to First Financial Audit** | `< 60 seconds` | Time from initial file upload to rendered interactive financial dashboard |
-| **User Action Approval Rate** | `≥ 70%` | Proportion of AI-suggested budgets and savings goals accepted by users |
-| **Session Security Integrity** | `100%` | All unattended sessions safely locked after 15 minutes of idle time |
-| **User Satisfaction Rating** | `≥ 4.8 / 5.0` | User sentiment regarding budgeting clarity and advice relevance |
+| **Statement extraction accuracy** | ≥ 98.5% | Correct transaction parsing across different bank formats |
+| **Time to first audit** | < 60 seconds | From upload to interactive dashboard |
+| **User action approval rate** | ≥ 70% | AI suggestions that users actually accept |
+| **Session security** | 100% | Idle sessions locked after 15 minutes |
+| **User satisfaction** | ≥ 4.8 / 5.0 | Feedback on clarity and advice quality |
