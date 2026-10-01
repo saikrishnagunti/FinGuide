@@ -40,8 +40,32 @@ class ApiClient {
       options.body = JSON.stringify(body);
     }
 
-    const response = await fetch(`${API_BASE}${path}`, options);
-    const data = await response.json();
+    let response;
+    try {
+      response = await fetch(`${API_BASE}${path}`, options);
+    } catch (networkErr) {
+      throw new Error(`Network Error: Cannot connect to backend at ${API_BASE}. Please verify your backend server is online.`);
+    }
+
+    let data;
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error('Invalid JSON received from backend server.');
+      }
+    } else {
+      const text = await response.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        if (!response.ok) {
+          throw new Error(`Backend server error (${response.status}): ${response.statusText || 'Endpoint unavailable'}`);
+        }
+        throw new Error('Backend is not connected yet. Please ensure your backend is deployed on Render and VITE_API_URL is configured in Vercel.');
+      }
+    }
 
     if (!response.ok) {
       throw new Error(data.error || `Request failed: ${response.status}`);
@@ -59,13 +83,33 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(`${API_BASE}${path}`, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
+    let response;
+    try {
+      response = await fetch(`${API_BASE}${path}`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+    } catch (networkErr) {
+      throw new Error(`Network Error: Cannot connect to backend at ${API_BASE}.`);
+    }
 
-    const data = await response.json();
+    let data;
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error('Invalid JSON received from backend server during upload.');
+      }
+    } else {
+      const text = await response.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error('Backend upload service is not responding with valid JSON. Please check backend logs.');
+      }
+    }
 
     if (!response.ok) {
       throw new Error(data.error || 'Upload failed');
