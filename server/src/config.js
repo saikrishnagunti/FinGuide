@@ -9,6 +9,7 @@ const config = {
   uploadDir: process.env.UPLOAD_DIR || './data/uploads',
   jwtExpiresIn: '7d',
   corsOrigin: process.env.CORS_ORIGIN || '',
+  resendApiKey: process.env.RESEND_API_KEY || '',
 
   // Email / SMTP Settings
   smtp: {
