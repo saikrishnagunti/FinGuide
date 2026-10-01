@@ -1,5 +1,32 @@
 import { readFileSync, unlinkSync } from 'fs';
 import { parse } from 'csv-parse/sync';
+import { PDFParse } from 'pdf-parse';
+
+// Common Indian & International Bank Names for statement identification
+const KNOWN_BANKS = [
+  ['State Bank of India', ['state bank of india', 'sbi']],
+  ['HDFC Bank', ['hdfc bank', 'hdfc']],
+  ['ICICI Bank', ['icici bank', 'icici']],
+  ['Axis Bank', ['axis bank', 'uti bank']],
+  ['Kotak Mahindra Bank', ['kotak mahindra', 'kotak bank', 'kotak']],
+  ['Punjab National Bank', ['punjab national bank', 'pnb']],
+  ['Bank of Baroda', ['bank of baroda', 'bob']],
+  ['Canara Bank', ['canara bank']],
+  ['Union Bank of India', ['union bank']],
+  ['IndusInd Bank', ['indusind bank']],
+  ['IDFC FIRST Bank', ['idfc first', 'idfc bank']],
+  ['Yes Bank', ['yes bank']],
+  ['Federal Bank', ['federal bank']],
+  ['Citibank', ['citibank', 'citi']],
+  ['Standard Chartered', ['standard chartered', 'scb']],
+  ['HSBC Bank', ['hsbc']],
+  ['Chase Bank', ['jpmorgan chase', 'chase bank', 'chase']],
+  ['Bank of America', ['bank of america', 'bofa']],
+  ['Wells Fargo', ['wells fargo']],
+];
+
+const DATE_REGEX = /(\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b|\b\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2}\b|\b\d{1,2}[\s\-][A-Za-z]{3}[\s\-]\d{2,4}\b)/;
+const AMOUNT_REGEX = /(?:Rs\.?|INR|₹|\$|€|£)?\s*([0-9]{1,3}(?:,[0-9]{2,3})*\.[0-9]{2}|[0-9]+\.[0-9]{2})/gi;
 
 /**
  * Categorize transaction based on keywords in description.
@@ -178,6 +205,177 @@ export function parseCsvTransactions(filePath) {
 }
 
 /**
+ * Direct native PDF bank statement text parser (pure Node.js / pdf-parse).
+ * Works offline, in memory, and without requiring any external Python service.
+ */
+export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
+  const fileBuffer = readFileSync(filePath);
+  const parser = new PDFParse({ data: fileBuffer });
+  let allText = '';
+  try {
+    const textResult = await parser.getText();
+    if (textResult.pages && textResult.pages.length > 0) {
+      allText = textResult.pages.map(p => p.text).join('\n');
+    } else {
+      allText = textResult.text || '';
+    }
+  } catch (err) {
+    console.warn('[StatementParser] Native PDF getText error:', err.message);
+  } finally {
+    try { await parser.destroy(); } catch {}
+  }
+
+  if (!allText || !allText.trim()) {
+    throw new Error('PDF file contains no readable text. It may be a scanned image or password-protected document.');
+  }
+
+  // 1. Detect Bank Name
+  let detectedBank = 'Bank Statement';
+  const lowerText = allText.toLowerCase();
+  for (const [bankName, aliases] of KNOWN_BANKS) {
+    if (aliases.some(alias => lowerText.includes(alias))) {
+      detectedBank = bankName;
+      break;
+    }
+  }
+
+  // 2. Detect Account Number (masked)
+  const acMatch = allText.match(/(?:account\s*(?:no|number|#|id)?|a\/c\s*(?:no)?)\s*[:.-]?\s*([0-9Xx*\-]{6,25})/i);
+  let accountNumber = null;
+  if (acMatch && acMatch[1]) {
+    const raw = acMatch[1].trim();
+    accountNumber = raw.length >= 4 ? `XXXX${raw.slice(-4)}` : raw;
+  }
+
+  // 3. Detect Period
+  const periodMatch = allText.match(/(?:period|statement\s*from|from)\s*[:.-]?\s*(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})\s*(?:to|-|through)\s*(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/i);
+  let periodStart = null;
+  let periodEnd = null;
+  if (periodMatch) {
+    periodStart = normalizeDate(periodMatch[1]);
+    periodEnd = normalizeDate(periodMatch[2]);
+  }
+
+  // 4. Parse transaction rows from text lines
+  const lines = allText.split(/\r?\n/);
+  const transactions = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const lowerLine = line.toLowerCase();
+
+    // Skip header/footer noise
+    if (
+      lowerLine.includes('opening balance') ||
+      lowerLine.includes('closing balance') ||
+      lowerLine.includes('total withdrawal') ||
+      lowerLine.includes('total deposit') ||
+      lowerLine.includes('page ') ||
+      lowerLine.includes('narration / description') ||
+      lowerLine.includes('account statement') ||
+      lowerLine.includes('statement of')
+    ) {
+      continue;
+    }
+
+    const dateMatch = line.match(DATE_REGEX);
+    if (!dateMatch) {
+      if (transactions.length > 0 && line.length < 100 && !/^\d+$/.test(line)) {
+        const last = transactions[transactions.length - 1];
+        last.description = `${last.description} ${line}`.replace(/\s+/g, ' ').trim();
+      }
+      continue;
+    }
+
+    const rawDate = dateMatch[1];
+    const postDateText = line.slice(dateMatch.index + rawDate.length).trim();
+
+    // Find all amounts
+    const amountMatches = [...postDateText.matchAll(AMOUNT_REGEX)].map(m => m[1]);
+    if (!amountMatches || amountMatches.length === 0) continue;
+
+    const nums = amountMatches.map(a => parseFloat(a.replace(/,/g, '')));
+    let finalAmount = 0;
+    let type = 'expense';
+
+    if (nums.length >= 3) {
+      const debit = nums[0];
+      const credit = nums[1];
+      if (debit > 0) {
+        finalAmount = debit;
+        type = 'expense';
+      } else if (credit > 0) {
+        finalAmount = credit;
+        type = 'income';
+      } else {
+        finalAmount = nums[0];
+      }
+    } else if (nums.length >= 1) {
+      finalAmount = nums[0];
+      if (
+        /\b(?:cr|credit|deposit)\b/.test(lowerLine) ||
+        /salary|payroll|stipend|dividend|interest|refund|cashback/i.test(line)
+      ) {
+        type = 'income';
+      } else {
+        type = 'expense';
+      }
+    }
+
+    if (finalAmount <= 0) continue;
+
+    // Clean description: strip amounts and common banking prefixes
+    let desc = postDateText;
+    for (const aStr of amountMatches) {
+      desc = desc.replace(aStr, '');
+    }
+    desc = desc
+      .replace(/\b(?:UPI|NEFT|RTGS|IMPS|CARD|REF|CHQ|POS|TRANSFER|CHQ\/REF|NO\.)[0-9A-Za-z\-_]*\b/gi, '')
+      .replace(/[₹$€£,;|]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const stdDate = normalizeDate(rawDate);
+    const category = autoCategorize(desc || 'Bank Transaction', type === 'income' ? 'Salary & Income' : null);
+
+    transactions.push({
+      date: stdDate,
+      description: desc || 'Bank Transaction',
+      amount: Math.round(finalAmount * 100) / 100,
+      type,
+      category,
+    });
+  }
+
+  // Sort chronologically
+  transactions.sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!periodStart && transactions.length > 0) {
+    periodStart = transactions[0].date;
+    periodEnd = transactions[transactions.length - 1].date;
+  }
+
+  const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+  const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+
+  return {
+    count: transactions.length,
+    statement_metadata: {
+      bank_name: detectedBank,
+      account_number: accountNumber,
+      period_start: periodStart,
+      period_end: periodEnd,
+      total_income: Math.round(totalIncome * 100) / 100,
+      total_expenses: Math.round(totalExpenses * 100) / 100,
+      net_savings: Math.round((totalIncome - totalExpenses) * 100) / 100,
+      count: transactions.length,
+    },
+    transactions,
+  };
+}
+
+/**
  * Universal statement file parser (PDF or CSV).
  * Deletes temporary file upon completion.
  */
@@ -197,10 +395,31 @@ export async function parseStatementFile(filePath, originalname, mimetype, agent
 
   try {
     if (isPdf) {
-      const pdfData = await agentClient.parsePdfStatement(filePath, originalname);
-      rawTransactions = pdfData.transactions || [];
-      if (pdfData.statement_metadata) {
-        metadata = { ...metadata, ...pdfData.statement_metadata };
+      let agentSucceeded = false;
+      // 1. Try agent first if client available
+      if (agentClient) {
+        try {
+          const pdfData = await agentClient.parsePdfStatement(filePath, originalname);
+          if (pdfData && Array.isArray(pdfData.transactions) && pdfData.transactions.length > 0) {
+            rawTransactions = pdfData.transactions;
+            if (pdfData.statement_metadata) {
+              metadata = { ...metadata, ...pdfData.statement_metadata };
+            }
+            agentSucceeded = true;
+          }
+        } catch (agentErr) {
+          console.warn('[StatementParser] Python agent unavailable or failed:', agentErr.message, 'Falling back to native Node.js PDF engine.');
+        }
+      }
+
+      // 2. Resilient Native Node.js PDF parsing fallback
+      if (!agentSucceeded) {
+        console.log(`[StatementParser] Parsing PDF via native Node.js engine: ${originalname}`);
+        const nativePdfData = await parsePdfNative(filePath, originalname);
+        rawTransactions = nativePdfData.transactions || [];
+        if (nativePdfData.statement_metadata) {
+          metadata = { ...metadata, ...nativePdfData.statement_metadata };
+        }
       }
     } else {
       rawTransactions = parseCsvTransactions(filePath);

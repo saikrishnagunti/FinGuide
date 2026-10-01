@@ -8,7 +8,13 @@ import config from '../config.js';
  */
 class AgentClient {
   constructor() {
-    this.baseUrl = config.agentServiceUrl;
+    let url = config.agentServiceUrl || 'http://127.0.0.1:8000';
+    try {
+      new URL(url);
+    } catch {
+      url = 'http://127.0.0.1:8000';
+    }
+    this.baseUrl = url;
     this.client = axios.create({
       baseURL: this.baseUrl,
       timeout: 60000, // 60s timeout for AI responses

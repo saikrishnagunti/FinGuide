@@ -1,11 +1,31 @@
 import 'dotenv/config';
 
+function sanitizeUrl(rawUrl, fallback = 'http://127.0.0.1:8000') {
+  if (!rawUrl || typeof rawUrl !== 'string' || !rawUrl.trim()) {
+    return fallback;
+  }
+  let trimmed = rawUrl.trim().replace(/\/+$/, '');
+  if (!/^https?:\/\//i.test(trimmed)) {
+    if (trimmed.includes('localhost') || trimmed.includes('127.0.0.1') || /:\d+$/.test(trimmed)) {
+      trimmed = `http://${trimmed}`;
+    } else {
+      trimmed = `https://${trimmed}`;
+    }
+  }
+  try {
+    new URL(trimmed);
+    return trimmed;
+  } catch {
+    return fallback;
+  }
+}
+
 const config = {
   port: parseInt(process.env.PORT || '5000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   secretKey: process.env.SECRET_KEY || 'dev-secret-key-change-me',
   databasePath: process.env.DATABASE_PATH || './data/finguide.db',
-  agentServiceUrl: process.env.AGENT_SERVICE_URL || 'http://127.0.0.1:8000',
+  agentServiceUrl: sanitizeUrl(process.env.AGENT_SERVICE_URL, 'http://127.0.0.1:8000'),
   uploadDir: process.env.UPLOAD_DIR || './data/uploads',
   jwtExpiresIn: '7d',
   corsOrigin: process.env.CORS_ORIGIN || '',

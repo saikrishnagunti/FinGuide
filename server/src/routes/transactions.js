@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../database.js';
 import config from '../config.js';
 import { agentClient } from '../services/agent-client.js';
+import { parseStatementFile } from '../services/statement-parser.js';
 
 const router = Router();
 
@@ -366,73 +367,17 @@ router.post('/parse', (req, res) => {
         return res.status(400).json({ error: 'No file received. Please select a CSV or PDF file to upload.' });
       }
 
-      const isPdf = /\.pdf$/i.test(req.file.originalname) || req.file.mimetype === 'application/pdf';
-      let rawTransactions = [];
-      let metadata = {
-        bank_name: isPdf ? 'Bank Statement' : 'CSV Statement',
-        account_number: null,
-        period_start: null,
-        period_end: null,
-        total_income: 0,
-        total_expenses: 0,
-        net_savings: 0,
-        count: 0,
-      };
-
-      if (isPdf) {
-        console.log(`Parsing bank statement PDF via pdfplumber: ${req.file.originalname}`);
-        const pdfData = await agentClient.parsePdfStatement(req.file.path, req.file.originalname);
-        rawTransactions = pdfData.transactions || [];
-        if (pdfData.statement_metadata) {
-          metadata = { ...metadata, ...pdfData.statement_metadata };
-        }
-      } else {
-        rawTransactions = parseCsvTransactions(req.file.path);
-      }
-
-      // Cleanup uploaded temp file immediately
-      try {
-        unlinkSync(req.file.path);
-      } catch {}
-
-      if (!rawTransactions || rawTransactions.length === 0) {
-        return res.status(400).json({
-          error: isPdf
-            ? 'Could not extract transactions from PDF. Please ensure the document is a readable bank account statement.'
-            : 'Could not detect any valid transactions. Please ensure your CSV has Date, Description, and Amount columns.',
-        });
-      }
-
-      // Map to consistent structure with client temp_id for inline editing in the HITL review table
-      const previewTransactions = rawTransactions.map((t, idx) => ({
-        temp_id: `tmp_${idx}_${Date.now()}`,
-        date: normalizeDate(t.date),
-        description: String(t.description || 'Transaction').trim(),
-        amount: Math.abs(Number(t.amount) || 0),
-        type: t.type === 'income' ? 'income' : 'expense',
-        category: t.category || autoCategorize(t.description, null),
-      }));
-
-      // Calculate totals
-      const totalIncome = previewTransactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-      const totalExpenses = previewTransactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
-
-      metadata.total_income = Math.round(totalIncome * 100) / 100;
-      metadata.total_expenses = Math.round(totalExpenses * 100) / 100;
-      metadata.net_savings = Math.round((totalIncome - totalExpenses) * 100) / 100;
-      metadata.count = previewTransactions.length;
-
-      if (!metadata.period_start && previewTransactions.length > 0) {
-        const sorted = [...previewTransactions].sort((a, b) => a.date.localeCompare(b.date));
-        metadata.period_start = sorted[0].date;
-        metadata.period_end = sorted[sorted.length - 1].date;
-      }
+      console.log(`[Transactions] Parsing bank statement: ${req.file.originalname} (${req.file.mimetype})`);
+      const parsedData = await parseStatementFile(
+        req.file.path,
+        req.file.originalname,
+        req.file.mimetype,
+        agentClient
+      );
 
       res.json({
         preview: true,
-        filename: req.file.originalname,
-        summary: metadata,
-        transactions: previewTransactions,
+        ...parsedData,
       });
 
     } catch (err) {
@@ -522,26 +467,15 @@ router.post('/upload', (req, res) => {
       const isPdf = /\.pdf$/i.test(req.file.originalname) || req.file.mimetype === 'application/pdf';
       const batchId = uuidv4();
       const db = getDb();
-      let parsedTransactions = [];
 
-      if (isPdf) {
-        console.log(`Processing bank statement PDF via pdfplumber: ${req.file.originalname}`);
-        const pdfData = await agentClient.parsePdfStatement(req.file.path, req.file.originalname);
-        parsedTransactions = (pdfData.transactions || []).map(t => ({
-          date: normalizeDate(t.date),
-          description: String(t.description || 'Transaction').trim(),
-          amount: Math.abs(Number(t.amount) || 0),
-          type: t.type === 'income' ? 'income' : 'expense',
-          category: t.category || autoCategorize(t.description, null),
-        }));
-      } else {
-        parsedTransactions = parseCsvTransactions(req.file.path);
-      }
-
-      // Cleanup uploaded temp file
-      try {
-        unlinkSync(req.file.path);
-      } catch {}
+      console.log(`[Transactions] Processing upload bank statement: ${req.file.originalname} (${req.file.mimetype})`);
+      const parsedData = await parseStatementFile(
+        req.file.path,
+        req.file.originalname,
+        req.file.mimetype,
+        agentClient
+      );
+      const parsedTransactions = parsedData.transactions || [];
 
       if (parsedTransactions.length === 0) {
         return res.status(400).json({
