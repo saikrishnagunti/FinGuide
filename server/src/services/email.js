@@ -21,21 +21,21 @@ function getTransporter() {
               user: config.smtp.user,
               pass: config.smtp.pass,
             },
-            connectionTimeout: 4000,
-            greetingTimeout: 4000,
-            socketTimeout: 4000,
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000,
           }
         : {
             host: config.smtp.host || 'smtp.gmail.com',
-            port: config.smtp.port || 587,
+            port: config.smtp.port || 465,
             secure: config.smtp.secure || config.smtp.port === 465,
             auth: {
               user: config.smtp.user,
               pass: config.smtp.pass,
             },
-            connectionTimeout: 4000,
-            greetingTimeout: 4000,
-            socketTimeout: 4000,
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000,
           };
 
       transporter = nodemailer.createTransport(transportOptions);
@@ -191,9 +191,9 @@ async function sendMail({ to, subject, html, text, otpCode, purpose }) {
         html,
       });
 
-      // 4.5-second timeout safeguard so requests never hang if host blocks outbound mail ports
+      // 10-second timeout safeguard so requests never hang if host blocks outbound mail ports
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('SMTP timeout (outbound mail port restricted on host)')), 4500)
+        setTimeout(() => reject(new Error('SMTP timeout (outbound mail port restricted on host)')), 10000)
       );
 
       const info = await Promise.race([sendPromise, timeoutPromise]);
