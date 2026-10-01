@@ -1,187 +1,271 @@
+<div align="right">
+<span style="background: #E0F2FE; color: #0369A1; padding: 5px 16px; border-radius: 9999px; font-size: 12px; font-weight: 700; letter-spacing: 0.2px;">Production. Cloud Infrastructure. Data Security.</span>
+</div>
+
+# 🚀 DEPLOYMENT.md
 # Deployment & Cloud Architecture
-
-> **Production Hosting, Database Isolation, GitHub Security Guarantees & Secret Management**
-
----
-
-## 1. Cloud Data Isolation & GitHub Security
-
-### ❓ If someone pulls this project from my GitHub, will they have access to my cloud data?
-
-> [!IMPORTANT]
-> **NO, NEVER.** Anyone cloning your GitHub repository has **0% access** to your production cloud database, user records, or financial data.
-
-| Security Pillar | How FinGuide Protects You |
-| :--- | :--- |
-| 📂 **Source Code $\neq$ Live Database** | GitHub stores only application logic (React components, Express routes, Python algorithms). It **never** contains running databases, user records, or sessions. |
-| 🔑 **Zero Credentials in Git** | Database connection strings, JWT secret keys, and API tokens live **exclusively** inside private cloud provider environment variables (Render, Vercel). They are never committed to Git. |
-| 🛡️ **Encrypted Cloud Connections** | Cloud databases enforce TLS 1.3 encryption, randomized multi-character tokens, and protected cloud infrastructure. |
-| 🚫 **Strict `.gitignore` Enforcement** | All `.env`, `*.db`, `*.sqlite`, `data/`, and uploaded PDFs are blocked from version control. |
+<p style="color: #64748B; font-size: 16px; margin-top: -6px;">Production hosting topology, database isolation, GitHub security guarantees, and secret management.</p>
 
 ---
 
-## 2. Database Architecture: Local vs. Production
+<div style="margin-bottom: 24px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+<span style="color: #0284C7; font-weight: 800; font-size: 16px;">01</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Cloud Data Isolation & GitHub Security</h3>
+</div>
 
-FinGuide supports a hybrid architecture designed for zero friction in development and high reliability in production:
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div style="font-size: 14px; font-weight: 700; color: #0F172A; margin-bottom: 8px;">
+❓ If someone pulls this project from my GitHub, will they have access to my cloud data?
+</div>
+<div style="font-size: 13px; color: #0369A1; background: #E0F2FE; border-left: 4px solid #0284C7; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-weight: 600;">
+👉 <strong>NO, NEVER.</strong> Someone cloning your GitHub repository has <strong>0% access</strong> to your production cloud database, user records, or secrets.
+</div>
 
-| Feature | Local Development (SQLite) | Production (Turso Cloud libSQL) | Legacy / Alternative (Supabase / Postgres) |
-| :--- | :--- | :--- | :--- |
-| **Storage Location** | `server/data/finguide.db` | Dedicated Managed libSQL Cloud | Dedicated Managed Postgres Cluster |
-| **Concurrent Users** | Single-user testing | Thousands (Edge distributed) | Thousands (Connection pooling) |
-| **Stateless Serverless Support**| ⚠️ Ephemeral on restart | ✅ Fully stateless & persistent | ✅ Fully stateless & persistent |
-| **Automated Backups** | Manual file copy | ✅ Point-in-time recovery & cloud replication | ✅ Point-in-time recovery & daily snapshots |
-| **Free Tier Durability** | N/A | ✅ Never shuts down, no volume fees | ⚠️ Pauses after 7 days of inactivity |
-| **Recommended For** | Local testing & offline demo | **Active Production Default** | Enterprise Postgres installations |
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+<div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px;">
+<div style="font-size: 15px; margin-bottom: 4px;">📂 <strong>Code &ne; Database</strong></div>
+<div style="font-size: 12px; color: #475569; line-height: 1.5;">GitHub only stores your <em>source code</em> (React components, Express routes, Python logic). It never contains running servers, databases, or user records.</div>
+</div>
+<div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px;">
+<div style="font-size: 15px; margin-bottom: 4px;">🔑 <strong>Zero Keys in Git</strong></div>
+<div style="font-size: 12px; color: #475569; line-height: 1.5;">Cloud credentials (JWT secrets, API keys, database connection strings) live exclusively in private cloud provider dashboards, <em>never</em> in GitHub.</div>
+</div>
+<div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px;">
+<div style="font-size: 15px; margin-bottom: 4px;">🛡️ <strong>Encrypted Firewalls</strong></div>
+<div style="font-size: 12px; color: #475569; line-height: 1.5;">Cloud databases enforce TLS 1.3 encryption, token authentication, and private network bindings against unauthorized outside access.</div>
+</div>
+</div>
+</div>
+</div>
 
----
+<div style="margin-bottom: 24px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+<span style="color: #9333EA; font-weight: 800; font-size: 16px;">02</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Database Architecture: Local vs. Production Cloud</h3>
+</div>
 
-## 3. Recommended Production Cloud Topology
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+<thead>
+<tr style="text-align: left; color: #64748B; border-bottom: 2px solid #E2E8F0;">
+<th style="padding: 10px 8px;">Feature</th>
+<th style="padding: 10px 8px;">Local Dev (SQLite)</th>
+<th style="padding: 10px 8px;">Production (Turso Cloud libSQL)</th>
+<th style="padding: 10px 8px;">Alternative (Supabase Postgres)</th>
+</tr>
+</thead>
+<tbody style="color: #334155;">
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 10px 8px; font-weight: 700;">Storage Location</td>
+<td style="padding: 10px 8px;"><code>server/data/finguide.db</code></td>
+<td style="padding: 10px 8px; color: #0284C7; font-weight: 700;">Managed libSQL Edge Cloud</td>
+<td style="padding: 10px 8px;">Managed Postgres Cluster</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 10px 8px; font-weight: 700;">Concurrent Users</td>
+<td style="padding: 10px 8px;">1 user (Local testing)</td>
+<td style="padding: 10px 8px; color: #047857; font-weight: 700;">Thousands (Edge replication)</td>
+<td style="padding: 10px 8px;">Thousands (Connection pool)</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 10px 8px; font-weight: 700;">Stateless Restarts</td>
+<td style="padding: 10px 8px; color: #DC2626;">❌ Resets if no volume</td>
+<td style="padding: 10px 8px; color: #047857; font-weight: 700;">✅ Fully persistent in cloud</td>
+<td style="padding: 10px 8px; color: #047857; font-weight: 700;">✅ Fully persistent in cloud</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 10px 8px; font-weight: 700;">Automated Backups</td>
+<td style="padding: 10px 8px;">Manual file copy</td>
+<td style="padding: 10px 8px; color: #047857; font-weight: 700;">✅ Automatic point-in-time snapshots</td>
+<td style="padding: 10px 8px;">✅ Daily cloud backups</td>
+</tr>
+<tr>
+<td style="padding: 10px 8px; font-weight: 700;">Recommended For</td>
+<td style="padding: 10px 8px;">Local testing & demo</td>
+<td style="padding: 10px 8px; font-weight: 700; color: #00ABE4;">Active Production Default</td>
+<td style="padding: 10px 8px;">Enterprise Postgres teams</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 
-```mermaid
-flowchart TD
-    subgraph Client ["Client Devices"]
-        Browser["👤 Web & Mobile Browser"]
-    end
+<div style="margin-bottom: 24px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+<span style="color: #059669; font-weight: 800; font-size: 16px;">03</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Production Cloud Topology</h3>
+</div>
 
-    subgraph Vercel ["Frontend Hosting (Vercel)"]
-        SPA["React 19 + Vite SPA<br/>(Edge Global CDN)"]
-    end
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+<div style="background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 12px; padding: 18px;">
+<div style="font-size: 24px; margin-bottom: 6px;">🌐</div>
+<div style="font-size: 13px; font-weight: 700; color: #1E40AF; margin-bottom: 2px;">Frontend Hosting</div>
+<div style="font-size: 11px; font-weight: 600; color: #2563EB; margin-bottom: 8px;">Vercel Edge Network</div>
+<ul style="font-size: 11px; color: #475569; margin: 0; padding-left: 16px; line-height: 1.6;">
+<li>Automated Git CI/CD deployments</li>
+<li>Global CDN edge caching</li>
+<li>Free SSL & custom domains</li>
+</ul>
+</div>
 
-    subgraph Render ["Backend Services (Render)"]
-        Gateway["⚙️ Node.js Express Gateway<br/>(JWT Auth, Rate Limiting, CORS)"]
-        Agent["🤖 Python FastAPI AI Agent<br/>(Gemini 3.5 Flash Lite + ARIMA)"]
-    end
+<div style="background: #F0FDF4; border: 1px solid #DCFCE7; border-radius: 12px; padding: 18px;">
+<div style="font-size: 24px; margin-bottom: 6px;">⚙️</div>
+<div style="font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 2px;">Node Gateway</div>
+<div style="font-size: 11px; font-weight: 600; color: #16A34A; margin-bottom: 8px;">Render Web Service</div>
+<ul style="font-size: 11px; color: #475569; margin: 0; padding-left: 16px; line-height: 1.6;">
+<li>Always-on Express server</li>
+<li>Brevo HTTPS API OTP delivery</li>
+<li>Zero-trust session & rate limits</li>
+</ul>
+</div>
 
-    subgraph CloudServices ["Managed Cloud Services"]
-        Turso[("☁️ Turso Cloud Database<br/>(libSQL Edge Persistence)")]
-        Brevo["📧 Brevo Email API<br/>(HTTPS Port 443 OTP Delivery)"]
-        Gemini["🧠 Google AI Studio<br/>(Gemini 3.5 Flash Lite)"]
-    end
+<div style="background: #FAF5FF; border: 1px solid #E9D5FF; border-radius: 12px; padding: 18px;">
+<div style="font-size: 24px; margin-bottom: 6px;">🤖</div>
+<div style="font-size: 13px; font-weight: 700; color: #6B21A8; margin-bottom: 2px;">AI Agent Service</div>
+<div style="font-size: 11px; font-weight: 600; color: #9333EA; margin-bottom: 8px;">Render Python Service</div>
+<ul style="font-size: 11px; color: #475569; margin: 0; padding-left: 16px; line-height: 1.6;">
+<li>Python 3.11+ FastAPI runtime</li>
+<li>Gemini 3.5 Flash Lite engine</li>
+<li>statsmodels ARIMA forecasts</li>
+</ul>
+</div>
 
-    Browser -->|HTTPS| SPA
-    SPA -->|REST API / JSON| Gateway
-    Gateway -->|Private Network| Agent
-    Gateway -->|libSQL over TLS| Turso
-    Gateway -->|HTTPS API| Brevo
-    Agent -->|REST API| Gemini
-```
+<div style="background: #FFFBEB; border: 1px solid #FEF3C7; border-radius: 12px; padding: 18px;">
+<div style="font-size: 24px; margin-bottom: 6px;">🗄️</div>
+<div style="font-size: 13px; font-weight: 700; color: #92400E; margin-bottom: 2px;">Production Database</div>
+<div style="font-size: 11px; font-weight: 600; color: #B45309; margin-bottom: 8px;">Turso Cloud (libSQL)</div>
+<ul style="font-size: 11px; color: #475569; margin: 0; padding-left: 16px; line-height: 1.6;">
+<li>Serverless libSQL cloud</li>
+<li>Encrypted real-time sync</li>
+<li>Multi-region durability</li>
+</ul>
+</div>
+</div>
+</div>
 
-### Infrastructure Summary
+<div style="margin-bottom: 24px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+<span style="color: #DC2626; font-weight: 800; font-size: 16px;">04</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Secrets & Environment Variables Management</h3>
+</div>
 
-- **Frontend (`frontend/`)**: Hosted on **Vercel** with automatic Git deployments, HTTP/3, and global CDN caching.
-- **API Gateway (`server/`)**: Hosted on **Render** (Node.js web service) managing auth, rate limiting, and business logic.
-- **AI Intelligence Agent (`agent/`)**: Hosted on **Render** (Python FastAPI service) handling statement parsing, statistical forecasts, and Gemini reasoning.
-- **Production Database**: **Turso Cloud** (libSQL) providing serverless, persistent, encrypted storage synchronized with local failover.
-- **Email Delivery**: **Brevo HTTPS API** sending OTP verification codes worldwide on port 443 (bypassing cloud SMTP port blocks).
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<p style="font-size: 12px; color: #64748B; margin: 0 0 12px;">These variables are saved directly in your cloud dashboard (Render & Vercel) and injected at container startup.</p>
+<table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+<thead>
+<tr style="text-align: left; color: #64748B; border-bottom: 1px solid #E2E8F0;">
+<th style="padding: 8px 0;">Target Service</th>
+<th>Variable Name</th>
+<th>Recommended Setting</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody style="color: #334155;">
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700; color: #1E40AF;">Frontend (Vercel)</td>
+<td><code>VITE_API_URL</code></td>
+<td><code>https://your-node-api.onrender.com</code></td>
+<td>Directs React requests to live Node gateway</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700; color: #065F46;">Gateway (Render)</td>
+<td><code>NODE_ENV</code></td>
+<td><code>production</code></td>
+<td>Enables secure cookies and production mode</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700; color: #065F46;">Gateway (Render)</td>
+<td><code>SECRET_KEY</code></td>
+<td><code>64-character random string</code></td>
+<td>Cryptographic salt for JWT token signing</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700; color: #065F46;">Gateway (Render)</td>
+<td><code>CORS_ORIGIN</code></td>
+<td><code>https://fin-guide-gamma.vercel.app</code></td>
+<td>Whitelists frontend origin to prevent CORS blocks</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700; color: #065F46;">Gateway (Render)</td>
+<td><code>TURSO_DATABASE_URL</code></td>
+<td><code>libsql://finguide-db-...turso.io</code></td>
+<td>Live connection URL to Turso cloud database</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700; color: #065F46;">Gateway (Render)</td>
+<td><code>TURSO_AUTH_TOKEN</code></td>
+<td><code>eyJhbGciOi...</code></td>
+<td>Authentication token for Turso cloud database</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700; color: #065F46;">Gateway (Render)</td>
+<td><code>BREVO_API_KEY</code></td>
+<td><code>xkeysib-...</code></td>
+<td>Brevo HTTPS API key for sending email OTPs</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700; color: #065F46;">Gateway (Render)</td>
+<td><code>AGENT_SERVICE_URL</code></td>
+<td><code>https://your-agent.onrender.com</code></td>
+<td>Bridge to Python FastAPI intelligence service</td>
+</tr>
+<tr>
+<td style="padding: 8px 0; font-weight: 700; color: #6B21A8;">Agent (Render)</td>
+<td><code>GEMINI_API_KEY</code></td>
+<td><code>AIzaSy...</code></td>
+<td>Authenticates Google Gemini 3.5 Flash Lite engine</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 
----
+<div style="margin-bottom: 24px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+<span style="color: #EA580C; font-weight: 800; font-size: 16px;">05</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Step-by-Step Launch Workflow</h3>
+</div>
 
-## 4. Production Secrets & Environment Variables
+<div style="display: flex; flex-direction: column; gap: 10px;">
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; display: flex; gap: 12px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div style="background: #EFF6FF; color: #2563EB; font-weight: 800; border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">1</div>
+<div>
+<div style="font-size: 13px; font-weight: 700; color: #0F172A;">Push Clean Codebase to GitHub</div>
+<div style="font-size: 12px; color: #64748B;">Verify <code>.env</code> and <code>server/data/*.db</code> are ignored. Run <code>git push origin main</code>.</div>
+</div>
+</div>
 
-Variables must be added to your cloud provider dashboards under **Settings > Environment Variables**. They are injected at container startup and never committed to version control.
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; display: flex; gap: 12px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div style="background: #ECFDF5; color: #059669; font-weight: 800; border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">2</div>
+<div>
+<div style="font-size: 13px; font-weight: 700; color: #0F172A;">Set Up Turso Cloud Database</div>
+<div style="font-size: 12px; color: #64748B;">Create a database at turso.tech, copy the database URL and generate an auth token.</div>
+</div>
+</div>
 
-### Node Gateway (`server`) — Render Environment Variables
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; display: flex; gap: 12px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div style="background: #FAF5FF; color: #7C3AED; font-weight: 800; border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">3</div>
+<div>
+<div style="font-size: 13px; font-weight: 700; color: #0F172A;">Deploy Python AI Service on Render</div>
+<div style="font-size: 12px; color: #64748B;">Root: <code>agent</code>. Build: <code>pip install -r requirements.txt</code>. Start: <code>uvicorn app.main:app --host 0.0.0.0 --port $PORT</code>.</div>
+</div>
+</div>
 
-| Variable | Required? | Recommended Setting | Purpose |
-| :--- | :---: | :--- | :--- |
-| `NODE_ENV` | **Yes** | `production` | Enables production optimizations, secure cookies, and stripped debug errors. |
-| `SECRET_KEY` | **Yes** | *Generate 64-char hex string* | Cryptographic salt used for signing and verifying user JWT tokens. |
-| `CORS_ORIGIN` | **Yes** | `https://fin-guide-gamma.vercel.app` | Whitelists your production frontend domain to prevent unauthorized origins. |
-| `TURSO_DATABASE_URL` | **Yes** | `libsql://your-db-name.turso.io` | Live cloud database connection URL. |
-| `TURSO_AUTH_TOKEN` | **Yes** | `eyJhbGciOi...` | Cloud database authentication token. |
-| `AGENT_SERVICE_URL` | **Yes** | `https://finguide-agent.onrender.com` | Internal or public URL pointing to the running Python agent service. |
-| `BREVO_API_KEY` | **Yes** | `xkeysib-...` | Brevo API key for delivering authentication OTP emails over HTTPS. |
-| `SMTP_USER` | Optional | `your-email@gmail.com` | Verified sender email used as default header in Brevo emails. |
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; display: flex; gap: 12px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div style="background: #EFF6FF; color: #1D4ED8; font-weight: 800; border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">4</div>
+<div>
+<div style="font-size: 13px; font-weight: 700; color: #0F172A;">Deploy Node Express Gateway on Render</div>
+<div style="font-size: 12px; color: #64748B;">Root: <code>server</code>. Build: <code>npm install</code>. Start: <code>node src/index.js</code>. Add Turso and Brevo env vars.</div>
+</div>
+</div>
 
-> [!NOTE]
-> **Variables you can safely remove from Render:**
-> - `DATABASE_PATH`: Redundant (defaults automatically to `./data/finguide.db`).
-> - `RESEND_API_KEY`: FinGuide uses Brevo HTTPS API (`BREVO_API_KEY`).
-> - `SMTP_PASS`: Render blocks outbound SMTP ports 25, 465, and 587. All emails are sent via Brevo HTTPS API (port 443).
-
-### AI Agent Service (`agent`) — Render Environment Variables
-
-| Variable | Required? | Recommended Setting | Purpose |
-| :--- | :---: | :--- | :--- |
-| `GEMINI_API_KEY` | **Yes** | `AIzaSy...` | Authenticates with Google AI Studio for Gemini 3.5 Flash Lite. |
-| `GEMINI_MODEL` | Optional | `gemini-3.5-flash-lite` | Specifies reasoning model engine. |
-| `PORT` | Auto | Provided by Render | Port injected by Render web service. |
-
-### Frontend (`frontend`) — Vercel Environment Variables
-
-| Variable | Required? | Recommended Setting | Purpose |
-| :--- | :---: | :--- | :--- |
-| `VITE_API_URL` | **Yes** | `https://finguide-api.onrender.com` | Directs React Axios/fetch requests to your live Node gateway. |
-
----
-
-## 5. Step-by-Step Production Launch Workflow
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Dev as Developer
-    participant Git as GitHub
-    participant Turso as Turso Cloud
-    participant Render as Render Cloud
-    participant Vercel as Vercel Edge
-
-    Dev->>Git: git push origin main
-    Dev->>Turso: Create database & copy libsql URL + Auth Token
-    Dev->>Render: Deploy Agent (Python 3.11+, GEMINI_API_KEY)
-    Dev->>Render: Deploy Gateway (Node 20+, Turso URL + Token, Brevo Key)
-    Dev->>Vercel: Deploy Frontend (VITE_API_URL pointing to Gateway)
-    Vercel-->>Dev: Live Production URL ready!
-```
-
-### Step 1: Push Clean Codebase to GitHub
-Verify `.gitignore` is active and push your repository:
-```bash
-git status
-git push origin main
-```
-
-### Step 2: Set Up Turso Cloud Database
-1. Go to [Turso Console](https://turso.tech) and create a database (e.g. `finguide-db`).
-2. Copy the **Database URL** (`libsql://...`) and generate an **Auth Token**.
-3. Add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` to your Render Node service.
-
-### Step 3: Deploy Python AI Agent on Render
-1. Create a **New Web Service** connected to your GitHub repository.
-2. Settings:
-   - **Root Directory**: `agent`
-   - **Runtime**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-3. Add `GEMINI_API_KEY` under Environment Variables.
-
-### Step 4: Deploy Node.js Express Gateway on Render
-1. Create a **New Web Service** connected to your repository.
-2. Settings:
-   - **Root Directory**: `server`
-   - **Runtime**: `Node`
-   - **Build Command**: `npm install`
-   - **Start Command**: `node src/index.js`
-3. Add environment variables: `NODE_ENV`, `SECRET_KEY`, `CORS_ORIGIN`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `BREVO_API_KEY`, and `AGENT_SERVICE_URL`.
-
-### Step 5: Deploy React Frontend on Vercel
-1. In [Vercel Dashboard](https://vercel.com), click **Add New > Project** and import the repository.
-2. Set **Root Directory** to `frontend`.
-3. Under **Environment Variables**, set:
-   ```env
-   VITE_API_URL=https://your-node-api.onrender.com
-   ```
-4. Click **Deploy**.
-
----
-
-## 6. Pre-Flight Security & Privacy Checklist
-
-- [x] `.gitignore` active and blocking `.env`, `data/`, and `*.db`
-- [x] Zero plain credentials committed to GitHub
-- [x] Strong 64-character `SECRET_KEY` set in Render
-- [x] Production CORS restricted to `https://fin-guide-gamma.vercel.app`
-- [x] Turso cloud database synchronized and encrypted
-- [x] Brevo HTTPS email delivery operational for worldwide OTP verification
-- [x] 15-minute brute-force lockout and 15-minute inactivity auto-logout active
-- [x] HTTPS enforced on all production domains
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; display: flex; gap: 12px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div style="background: #FFFBEB; color: #D97706; font-weight: 800; border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">5</div>
+<div>
+<div style="font-size: 13px; font-weight: 700; color: #0F172A;">Deploy React Frontend on Vercel</div>
+<div style="font-size: 12px; color: #64748B;">Root: <code>frontend</code>. Set <code>VITE_API_URL</code> to your Render backend URL. Deploy!</div>
+</div>
+</div>
+</div>
+</div>

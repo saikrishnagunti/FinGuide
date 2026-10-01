@@ -1,105 +1,100 @@
+<div align="right">
+<span style="background: #E0E7FF; color: #4338CA; padding: 5px 16px; border-radius: 9999px; font-size: 12px; font-weight: 700; letter-spacing: 0.2px;">Clean. Consistent. Maintainable.</span>
+</div>
+
+# 💻 CODE_STYLE.md
 # Code Style Guide
-
-> **Engineering Standards, Conventions & Best Practices Across FinGuide**
-
----
-
-## 1. Engineering Philosophy
-
-| Principle | Meaning & Practical Implementation |
-| :--- | :--- |
-| **📖 Clarity Over Cleverness** | Write readable, self-describing code. Avoid compressed, complex one-liners when a clear 3-line block is easier to debug and test. |
-| **🛡️ Defensive Boundaries** | Never trust client input or raw third-party data. Validate payloads using Pydantic in Python and schema checks in Express. |
-| **✨ Zero UI Slop** | Internal framework terms (e.g. `sqlite3`, `sql.js`, `FastAPI error`, `gemini-3.5-flash-lite`) must **never** be exposed in end-user error toasts or UI copy. |
-| **♻️ Reusability & DRY** | Reuse established components in `frontend/src/components` and utilities in `server/src/services` before creating new files. |
+<p style="color: #64748B; font-size: 16px; margin-top: -6px;">Standards, naming conventions, and best practices across the FinGuide codebase.</p>
 
 ---
 
-## 2. React & Frontend Conventions
+<div style="margin-bottom: 24px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+<span style="color: #9333EA; font-weight: 800; font-size: 16px;">01</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Philosophy</h3>
+</div>
 
-- **Module Format**: Strictly use ES Modules (`import` and `export`).
-- **Component Pattern**:
-  ```jsx
-  import { useState, useEffect } from 'react';
-  import { Shield, Check } from 'lucide-react';
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+<div style="background: #FDF2F8; border: 1px solid #FCE7F3; border-radius: 12px; padding: 16px;">
+<div style="font-size: 18px; margin-bottom: 4px;">📖</div>
+<div style="font-size: 13px; font-weight: 700; color: #9D174D; margin-bottom: 4px;">Clarity Over Cleverness</div>
+<div style="font-size: 11px; color: #BE185D; line-height: 1.4;">Readable control flow is prioritized over compressed one-liners. Code should be self-explanatory.</div>
+</div>
 
-  export default function MetricCard({ title, value, status = 'normal' }) {
-    // Component logic
-    return (
-      <div className="card-panel">
-        <h3>{title}</h3>
-        <p className="metric-value">{value}</p>
-      </div>
-    );
-  }
-  ```
-- **State Updates**: Never mutate state objects or arrays in-place. Always use shallow/deep copy spreads:
-  ```javascript
-  // ✅ Correct:
-  setTransactions(prev => [...prev, newTx]);
-  // ❌ Incorrect:
-  transactions.push(newTx);
-  ```
-- **Cleanup Handlers**: Any `addEventListener` or `setInterval` registered in a `useEffect` must return an explicit cleanup function to prevent memory leaks and ghost event triggers.
-- **Naming Conventions**:
-  - Components & Pages: `PascalCase.jsx` (e.g. `AdvisorDrawer.jsx`, `Dashboard.jsx`)
-  - Context & Hooks: `camelCase.jsx` or `useCamelCase.js` (e.g. `AuthContext.jsx`, `useTheme.js`)
-  - Utilities: `camelCase.js` (e.g. `api.js`)
+<div style="background: #ECFDF5; border: 1px solid #D1FAE5; border-radius: 12px; padding: 16px;">
+<div style="font-size: 18px; margin-bottom: 4px;">🛡️</div>
+<div style="font-size: 13px; font-weight: 700; color: #065F46; margin-bottom: 4px;">Defensive Boundaries</div>
+<div style="font-size: 11px; color: #059669; line-height: 1.4;">Validate all inputs at HTTP boundaries, file parsers, and database queries.</div>
+</div>
 
----
+<div style="background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 12px; padding: 16px;">
+<div style="font-size: 18px; margin-bottom: 4px;">✨</div>
+<div style="font-size: 13px; font-weight: 700; color: #1E40AF; margin-bottom: 4px;">Zero UI Slop</div>
+<div style="font-size: 11px; color: #3B82F6; line-height: 1.4;">No backend library names, internal database engines, or model codes in the user interface.</div>
+</div>
+</div>
+</div>
 
-## 3. Python & FastAPI Backend Conventions
+<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
 
-- **PEP 8 Compliance**: Enforce 4-space indentation, snake_case function/variable names, and PascalCase class names.
-- **Strict Typing**: All function signatures must include Python type annotations:
-  ```python
-  from typing import List, Dict, Any
+<div style="flex: 1; min-width: 280px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+<span style="color: #3B82F6; font-weight: 800; font-size: 16px;">02</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">React & JavaScript</h3>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; font-size: 12px; color: #334155; line-height: 1.9; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div>✔ <strong>ES Modules:</strong> <code>import/export</code> syntax across all frontend and Node files</div>
+<div>✔ <strong>Functional Components:</strong> Clean JSX components with hooks</div>
+<div>✔ <strong>State Immutability:</strong> Always spread state objects and arrays (<code>[...prev]</code>)</div>
+<div>✔ <strong>Lifecycle Safety:</strong> Proper cleanup return functions in <code>useEffect</code></div>
+<div>✔ <strong>Component Naming:</strong> <code>PascalCase.jsx</code> for components & pages</div>
+<div>✔ <strong>Service Naming:</strong> <code>kebab-case.js</code> for backend utilities</div>
+</div>
+</div>
 
-  async def calculate_burn_rate(transactions: List[Dict[str, Any]], days: int = 30) -> float:
-      """Calculate user daily expense burn rate over specified lookback window."""
-      ...
-  ```
-- **FastAPI Endpoints**: Always define route handlers as `async def` and validate payloads with Pydantic:
-  ```python
-  from fastapi import APIRouter, HTTPException, Depends
-  from app.schemas import AnalysisRequest, AnalysisResponse
+<div style="flex: 1; min-width: 280px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+<span style="color: #10B981; font-weight: 800; font-size: 16px;">03</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Python & FastAPI</h3>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; font-size: 12px; color: #334155; line-height: 1.9; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div>✔ <strong>PEP 8 Compliance:</strong> 4-space indentation, snake_case identifiers</div>
+<div>✔ <strong>Type Annotations:</strong> Enforce type hints on all function signatures</div>
+<div>✔ <strong>Pydantic Schemas:</strong> Validate all request/response models</div>
+<div>✔ <strong>Async Endpoints:</strong> Use <code>async def</code> for FastAPI route handlers</div>
+<div>✔ <strong>Defensive Parsing:</strong> Gracefully handle malformed PDF tables and rows</div>
+<div>✔ <strong>Safety Guards:</strong> Clean PII redaction and financial advisory disclaimers</div>
+</div>
+</div>
 
-  router = APIRouter()
+</div>
 
-  @router.post("/analyze", response_model=AnalysisResponse)
-  async def analyze_finances(payload: AnalysisRequest):
-      ...
-  ```
-- **PDF Extraction**: All table extractions must be defensively wrapped in `try/except` blocks to handle malformed bank statements without crashing the server process.
+<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
 
----
+<div style="flex: 1; min-width: 280px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+<span style="color: #F59E0B; font-weight: 800; font-size: 16px;">04</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">CSS Design Tokens</h3>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; font-size: 12px; color: #334155; line-height: 1.9; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div>✔ <strong>No Hardcoded Hex:</strong> Use <code>var(--accent-primary)</code>, <code>var(--bg-card)</code></div>
+<div>✔ <strong>8px Spatial Grid:</strong> Use <code>var(--space-sm)</code>, <code>var(--space-md)</code>, etc.</div>
+<div>✔ <strong>Dark Mode Variables:</strong> Centralized tokens in <code>index.css</code></div>
+<div>✔ <strong>Tabular Numbers:</strong> Use monospace/tabular numbers for currencies</div>
+</div>
+</div>
 
-## 4. CSS & Styling Conventions
+<div style="flex: 1; min-width: 280px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+<span style="color: #6366F1; font-weight: 800; font-size: 16px;">05</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Database & SQL</h3>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; font-size: 12px; color: #334155; line-height: 1.9; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div>✔ <strong>Parameterized Queries:</strong> Always bind query variables to prevent SQLi</div>
+<div>✔ <strong>Turso Cloud Replication:</strong> Sync state mutations via <code>saveDatabase()</code></div>
+<div>✔ <strong>Snake Case Columns:</strong> <code>created_at</code>, <code>password_hash</code>, <code>locked_until</code></div>
+<div>✔ <strong>Transactions:</strong> Wrap multi-table bulk updates in transactions</div>
+</div>
+</div>
 
-- **Zero Hardcoded Colors**: Always use predefined CSS variables:
-  ```css
-  /* ✅ Correct */
-  background-color: var(--bg-card);
-  color: var(--accent-primary);
-
-  /* ❌ Forbidden */
-  background-color: #0d1e33;
-  color: #00abe4;
-  ```
-- **No TailwindCSS**: FinGuide relies on a curated, performant Vanilla CSS design system configured in [`frontend/src/index.css`](file:///d:/JOB/AI/FinGuide/frontend/src/index.css).
-- **Tabular Numerics**: Whenever displaying currencies or bank balances, use tabular numerals (`font-variant-numeric: tabular-nums;`) so numeric digits align vertically in tables.
-
----
-
-## 5. Database & SQL Conventions
-
-- **Always Parameterize Queries**: Never concatenate raw strings into SQL queries. Parameterized queries prevent SQL injection vulnerabilities:
-  ```javascript
-  // ✅ Correct:
-  await executeQuery('SELECT * FROM users WHERE email = ?', [email]);
-
-  // ❌ Forbidden:
-  await executeQuery(`SELECT * FROM users WHERE email = '${email}'`);
-  ```
-- **Cloud Replication**: Any state-mutating operation (`INSERT`, `UPDATE`, `DELETE`) on the database must trigger synchronization with Turso Cloud via `saveDatabase()`.
-- **Snake Case Columns**: Schema columns must follow snake_case (e.g., `user_id`, `password_hash`, `created_at`).
+</div>

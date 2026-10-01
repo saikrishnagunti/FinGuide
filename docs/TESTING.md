@@ -1,93 +1,126 @@
-# Quality Assurance & Testing Guide
+<div align="right">
+<span style="background: #ECFDF5; color: #047857; padding: 5px 16px; border-radius: 9999px; font-size: 12px; font-weight: 700; letter-spacing: 0.2px;">Verify early. Ship with confidence.</span>
+</div>
 
-> **Test Pyramid, Integration Scripts, Security Matrix & Pre-Deployment Verification**
-
----
-
-## 1. Testing Pyramid
-
-```mermaid
-flowchart TD
-    E2E["🎭 Visual & E2E Tests<br/>(Playwright UI Automation, Session Inactivity, OTP Flow)"]
-    INT["🔗 Integration & Security Tests<br/>(Node Express Routes, Turso DB Sync, Brevo Email)"]
-    UNIT["⚙️ Unit & Parsing Tests<br/>(pdfplumber Table Extraction, ARIMA Forecasts, Password Hashing)"]
-
-    UNIT --> INT
-    INT --> E2E
-```
-
-| Layer | Scope | Key Test Targets |
-| :--- | :--- | :--- |
-| **E2E / Browser** | End-to-end user experience | OTP registration modals, login lockout banners, inactivity countdown, bank statement upload dropzone. |
-| **Integration** | Service-to-service communication | Express to Python FastAPI communication, Turso cloud database sync, JWT authentication headers. |
-| **Unit** | Core algorithms & logic | Deterministic PDF statement parsing, ARIMA time-series modeling, bcrypt hashing, password regex. |
+# 🧪 TESTING.md
+# Testing Guide
+<p style="color: #64748B; font-size: 16px; margin-top: -6px;">Quality assurance strategy, automated tests, security checks, and end-to-end verification.</p>
 
 ---
 
-## 2. Automated Test Execution
+<div style="margin-bottom: 24px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+<span style="color: #9333EA; font-weight: 800; font-size: 16px;">01</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Testing Pyramid</h3>
+</div>
 
-### 1. Backend Security & Database Migration Test
-Verify that the database schema boots cleanly and Turso cloud synchronization connects without error:
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+<div style="background: #FDF2F8; border: 1px solid #FCE7F3; border-radius: 12px; padding: 16px; text-align: center;">
+<div style="font-size: 22px; margin-bottom: 4px;">🎭</div>
+<div style="font-size: 13px; font-weight: 700; color: #9D174D; margin-bottom: 4px;">Visual E2E Tests</div>
+<div style="font-size: 11px; color: #BE185D; line-height: 1.4;">Playwright browser tests verifying OTP modals, lockout banners, and responsiveness.</div>
+</div>
 
-```bash
-cd server
-node --input-type=module -e "
-import { initializeDatabase } from './src/database.js';
-await initializeDatabase();
-console.log('✅ Turso Cloud & SQLite initialization successful!');
-"
-```
+<div style="background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 12px; padding: 16px; text-align: center;">
+<div style="font-size: 22px; margin-bottom: 4px;">🔗</div>
+<div style="font-size: 13px; font-weight: 700; color: #1E40AF; margin-bottom: 4px;">Integration Tests</div>
+<div style="font-size: 11px; color: #3B82F6; line-height: 1.4;">Multi-step security flows, Turso DB mutations, and Python agent API communication.</div>
+</div>
 
-### 2. Frontend Production Build Verification
-Verify syntax, dependencies, asset bundling, and CSS token validity:
+<div style="background: #ECFDF5; border: 1px solid #D1FAE5; border-radius: 12px; padding: 16px; text-align: center;">
+<div style="font-size: 22px; margin-bottom: 4px;">⚙️</div>
+<div style="font-size: 13px; font-weight: 700; color: #065F46; margin-bottom: 4px;">Unit & Parsing Tests</div>
+<div style="font-size: 11px; color: #059669; line-height: 1.4;">Deterministic table bounding-box extraction and ARIMA forecast convergence.</div>
+</div>
+</div>
+</div>
 
-```bash
-cd frontend
-npm run build
-```
+<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
 
-### 3. AI Agent Health & Model Verification
-Confirm Python dependencies, Gemini client credentials, and FastAPI routes:
+<div style="flex: 1; min-width: 280px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+<span style="color: #3B82F6; font-weight: 800; font-size: 16px;">02</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Backend Security & DB Test</h3>
+</div>
+<div style="background: #0F172A; border-radius: 14px; padding: 18px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 11px; color: #E2E8F0; line-height: 1.7; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<span style="color: #94A3B8;"># Verify Turso cloud connection and local DB schema</span><br/>
+<span style="color: #38BDF8;">cd server</span><br/>
+<span style="color: #4ADE80;">node --input-type=module -e "</span><br/>
+<span style="color: #CBD5E1;">&nbsp;&nbsp;import { initializeDatabase } from './src/database.js';</span><br/>
+<span style="color: #CBD5E1;">&nbsp;&nbsp;await initializeDatabase();</span><br/>
+<span style="color: #CBD5E1;">&nbsp;&nbsp;console.log('✅ DB Migration & Turso OK');</span><br/>
+<span style="color: #4ADE80;">"</span>
+</div>
+</div>
 
-```bash
-cd agent
-python -c "
-from app.main import app
-from app.config import settings
-print(f'✅ Agent app loaded successfully using model: {settings.gemini_model}')
-"
-```
+<div style="flex: 1; min-width: 280px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+<span style="color: #10B981; font-weight: 800; font-size: 16px;">03</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Frontend Build Test</h3>
+</div>
+<div style="background: #0F172A; border-radius: 14px; padding: 18px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 11px; color: #E2E8F0; line-height: 1.7; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<span style="color: #94A3B8;"># Verify production frontend build & assets bundling</span><br/>
+<span style="color: #38BDF8;">cd frontend</span><br/>
+<span style="color: #4ADE80;">npm run build</span><br/><br/>
+<span style="color: #94A3B8;"># Runs Vite build and checks CSS tokens</span>
+</div>
+</div>
 
-### 4. API End-to-End Flow Test
-Run the comprehensive API test suite covering registration, auth, I&E snapshots, and AI advisor:
+</div>
 
-```bash
-cd server
-node test-api.js
-```
+<div style="margin-bottom: 24px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+<span style="color: #E11D48; font-weight: 800; font-size: 16px;">04</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Security Verification Matrix</h3>
+</div>
 
----
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+<thead>
+<tr style="text-align: left; color: #64748B; border-bottom: 1px solid #E2E8F0;">
+<th style="padding: 8px 0;">Security Test</th>
+<th>Trigger Condition</th>
+<th>Expected Outcome</th>
+</tr>
+</thead>
+<tbody style="color: #334155;">
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700;">Failed Login Lockout</td>
+<td>5 consecutive incorrect passwords</td>
+<td><span style="color: #E11D48; font-weight: 600;">HTTP 429:</span> 15-minute cooldown timer displayed</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700;">Anti-Brute Force OTP</td>
+<td>5 invalid verification codes entered</td>
+<td><span style="color: #E11D48; font-weight: 600;">HTTP 400:</span> Code revoked & deleted from database</td>
+</tr>
+<tr style="border-bottom: 1px solid #F1F5F9;">
+<td style="padding: 8px 0; font-weight: 700;">Session Inactivity</td>
+<td>13 minutes of no user interaction</td>
+<td><span style="color: #D97706; font-weight: 600;">Modal Warning:</span> 120s countdown before auto-logout</td>
+</tr>
+<tr>
+<td style="padding: 8px 0; font-weight: 700;">Clickjacking Defense</td>
+<td>Render site inside an <code>&lt;iframe&gt;</code></td>
+<td><span style="color: #059669; font-weight: 600;">Blocked:</span> Helmet <code>X-Frame-Options: DENY</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 
-## 3. Security Verification Matrix
+<div style="margin-bottom: 24px;">
+<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+<span style="color: #10B981; font-weight: 800; font-size: 16px;">05</span>
+<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Pre-Deployment Checklist</h3>
+</div>
 
-| Test Scenario | Trigger Condition | Expected Result |
-| :--- | :--- | :--- |
-| **Failed Login Lockout** | 5 consecutive incorrect passwords submitted | HTTP 429 response; 15-minute cooldown timer displayed on frontend; submit locked. |
-| **Anti-Brute Force OTP** | 5 invalid verification codes entered | Active code is revoked and permanently deleted from the database. |
-| **Session Inactivity** | 13 minutes of zero user input detected | Inactivity warning modal displayed with 120-second live countdown. |
-| **Unattended Auto-Logout** | 15 total minutes of inactivity elapse | Auth token is purged from client storage and user is redirected to `/login`. |
-| **Clickjacking Defense** | Web application loaded inside an external `<iframe>` | Blocked by browser via Helmet `X-Frame-Options: DENY`. |
-| **MIME Sniffing Defense** | Malicious content-type manipulation | Enforced via `X-Content-Type-Options: nosniff`. |
-
----
-
-## 4. Pre-Deployment Checklist
-
-Before merging into `main` and deploying to production, verify:
-
-- [x] **Git Status**: Working tree is clean and `.env` / database files are uncommitted.
-- [x] **Frontend Build**: `npm run build` completes with 0 errors in `frontend/`.
-- [x] **Database Sync**: Turso cloud connection string and auth token are verified.
-- [x] **Email Service**: Brevo HTTPS API key is verified and test email succeeds.
-- [x] **Environment Variables**: All required secrets are configured in Render and Vercel.
-- [x] **Documentation**: All `.md` documents in `docs/` reflect the latest architecture and features.
+<div style="background: #ECFDF5; border: 1px solid #D1FAE5; border-radius: 14px; padding: 20px; font-size: 13px; color: #065F46; line-height: 1.9; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+<div>✔ <code>npm run build</code> succeeds with 0 errors in <code>frontend/</code></div>
+<div>✔ Database schema migrations apply cleanly in <code>server/</code></div>
+<div>✔ Turso cloud replication connects and syncs on startup</div>
+<div>✔ Brevo HTTPS API key verified and test emails deliver</div>
+<div>✔ Environment variables configured in Render & Vercel</div>
+<div>✔ Documentation in <code>/docs</code> reflects latest changes</div>
+</div>
+</div>
