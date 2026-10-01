@@ -5,6 +5,7 @@ services:
   - type: web
     name: finguide-agent
     runtime: python
+    plan: free
     rootDir: agent
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -16,24 +17,21 @@ services:
         value: gemini-3.5-flash-lite
 
   # ------------------------------------------------------------------------------
-  # 2. FinGuide API Gateway (Node.js Express + SQLite Persistent Disk + Auth)
+  # 2. FinGuide API Gateway (Node.js Express + Free SQLite + Auth)
   # ------------------------------------------------------------------------------
   - type: web
     name: finguide-api
     runtime: node
+    plan: free
     rootDir: server
     buildCommand: npm install
     startCommand: node src/index.js
     healthCheckPath: /api/health
-    disk:
-      name: finguide_data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_PATH
-        value: /var/data/finguide.db
+        value: ./data/finguide.db
       - key: SECRET_KEY
         generateValue: true
       - key: AGENT_SERVICE_URL
