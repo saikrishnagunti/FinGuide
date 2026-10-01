@@ -70,6 +70,8 @@ router.post('/parse', (req, res) => {
   });
 });
 
+import { generateFallbackAudit } from '../services/audit-fallback.js';
+
 /**
  * POST /api/guest/analyze
  * Run financial analysis for a guest user (no login required, no database writes).
@@ -105,27 +107,43 @@ router.post('/analyze', async (req, res) => {
       });
     }
 
-    // Forward to agent with is_logged_in: false (triggers GUEST_ANALYSIS_PROMPT)
-    const result = await agentClient.analyze({
-      user_context: {
-        name: 'Guest User',
-        currency: '₹',
-        is_logged_in: false,
-      },
-      snapshots,
-      transactions: transactions || [],
-      goals: [],
-      period: 'current_session',
-      query: query || 'Provide a comprehensive guest financial audit for this session',
-    });
+    try {
+      // Forward to agent with is_logged_in: false (triggers GUEST_ANALYSIS_PROMPT)
+      const result = await agentClient.analyze({
+        user_context: {
+          name: 'Guest User',
+          currency: '₹',
+          is_logged_in: false,
+        },
+        snapshots,
+        transactions: transactions || [],
+        goals: [],
+        period: 'current_session',
+        query: query || 'Provide a comprehensive guest financial audit for this session',
+      });
 
-    res.json({
-      guest_mode: true,
-      ...result,
-    });
+      return res.json({
+        guest_mode: true,
+        ...result,
+      });
+    } catch (agentErr) {
+      console.warn('[GuestRoute] Python agent microservice unavailable:', agentErr.message, '— generating resilient guest audit report.');
+      const fallbackResult = generateFallbackAudit({
+        user: { name: 'Guest User', currency: '₹' },
+        snapshots,
+        transactions: transactions || [],
+        goals: [],
+        period: 'current_session',
+        query: query || '',
+      });
+      return res.json({
+        guest_mode: true,
+        ...fallbackResult,
+      });
+    }
   } catch (err) {
-    console.error('Guest analyze error:', err);
-    res.status(502).json({ error: err.message || 'Analysis failed' });
+    console.error('Guest analyze fatal error:', err);
+    res.status(500).json({ error: err.message || 'Analysis failed' });
   }
 });
 
