@@ -1,311 +1,126 @@
-<div align="right">
-<span style="background: #FDF2F8; color: #BE185D; padding: 5px 16px; border-radius: 9999px; font-size: 12px; font-weight: 700; letter-spacing: 0.2px;">Design. Build. Ship. Consistently.</span>
-</div>
+# 🎨 Design System
 
-# 🎨 DESIGN_SYSTEM.md
-# Design System
-<p style="color: #64748B; font-size: 16px; margin-top: -6px;">A consistent and scalable design system for a beautiful, modern, and accessible product.</p>
+<div align="center">
+
+![FinGuide UI](https://img.shields.io/badge/FinGuide-Design_System-00ABE4?style=for-the-badge&logo=figma&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vanilla CSS](https://img.shields.io/badge/CSS-Design_Tokens-178582?style=for-the-badge&logo=css3&logoColor=white)
+![Plus Jakarta Sans](https://img.shields.io/badge/Font-Plus_Jakarta_Sans-0A1828?style=for-the-badge)
+
+<p><em>Institutional-grade clarity, oceanic night aesthetic, and accessible design tokens for wealth management.</em></p>
+
+</div>
 
 ---
 
-<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+### 01 Brand Identity
 
-<div style="flex: 1; min-width: 280px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #9333EA; font-weight: 800; font-size: 16px;">01</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Brand Identity</h3>
-</div>
-<p style="font-size: 12px; color: #64748B; margin: 0 0 10px;">Our visual identity reflects precision, clarity, and trust.</p>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center; height: calc(100% - 46px); box-sizing: border-box;">
-<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-<div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #00ABE4, #178582); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 18px;">FG</div>
-<span style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #0A1828;">FinGuide</span>
-</div>
-<p style="font-size: 13px; color: #64748B; margin: 0; line-height: 1.5;">
-Empowering users with institutional clarity, automated bank statement audits, and predictive wealth forecasting.
-</p>
-</div>
-</div>
+| Brand Emblem | Identity & Positioning |
+| :---: | :--- |
+| <img src="https://img.shields.io/badge/FG-FinGuide-00ABE4?style=for-the-badge" height="38"/> | **FinGuide — AI Financial Intelligence & Wealth OS**<br/>Our visual identity reflects precision, institutional confidence, and user autonomy. Engineered for a **deep oceanic dark mode** (`#0A1828`) accented by electric drone blue (`#00ABE4`) and mint turquoise (`#178582`). |
 
-<div style="flex: 1.3; min-width: 320px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #EC4899; font-weight: 800; font-size: 16px;">02</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Color Palette</h3>
-</div>
-<p style="font-size: 12px; color: #64748B; margin: 0 0 10px;">Use these colors consistently across the product.</p>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px;">
-<div style="text-align: center;">
-<div style="height: 38px; border-radius: 6px; background: #00ABE4; margin-bottom: 4px;"></div>
-<div style="font-size: 10px; font-weight: 700; color: #0F172A;">Primary</div>
-<div style="font-size: 9px; color: #94A3B8;">#00ABE4</div>
-</div>
-<div style="text-align: center;">
-<div style="height: 38px; border-radius: 6px; background: #178582; margin-bottom: 4px;"></div>
-<div style="font-size: 10px; font-weight: 700; color: #0F172A;">Turquoise</div>
-<div style="font-size: 9px; color: #94A3B8;">#178582</div>
-</div>
-<div style="text-align: center;">
-<div style="height: 38px; border-radius: 6px; background: #0A1828; margin-bottom: 4px;"></div>
-<div style="font-size: 10px; font-weight: 700; color: #0F172A;">Navy Dark</div>
-<div style="font-size: 9px; color: #94A3B8;">#0A1828</div>
-</div>
-<div style="text-align: center;">
-<div style="height: 38px; border-radius: 6px; background: #0D1E33; margin-bottom: 4px;"></div>
-<div style="font-size: 10px; font-weight: 700; color: #0F172A;">Card Dark</div>
-<div style="font-size: 9px; color: #94A3B8;">#0D1E33</div>
-</div>
-<div style="text-align: center;">
-<div style="height: 38px; border-radius: 6px; background: #BFA181; margin-bottom: 4px;"></div>
-<div style="font-size: 10px; font-weight: 700; color: #0F172A;">Gold Tier</div>
-<div style="font-size: 9px; color: #94A3B8;">#BFA181</div>
-</div>
-</div>
-<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
-<div style="text-align: center;">
-<div style="height: 38px; border-radius: 6px; background: #178582; margin-bottom: 4px;"></div>
-<div style="font-size: 10px; font-weight: 700; color: #0F172A;">Success</div>
-<div style="font-size: 9px; color: #94A3B8;">#178582</div>
-</div>
-<div style="text-align: center;">
-<div style="height: 38px; border-radius: 6px; background: #E11D48; margin-bottom: 4px;"></div>
-<div style="font-size: 10px; font-weight: 700; color: #0F172A;">Danger</div>
-<div style="font-size: 9px; color: #94A3B8;">#E11D48</div>
-</div>
-<div style="text-align: center;">
-<div style="height: 38px; border-radius: 6px; background: #BFA181; margin-bottom: 4px;"></div>
-<div style="font-size: 10px; font-weight: 700; color: #0F172A;">Warning</div>
-<div style="font-size: 9px; color: #94A3B8;">#BFA181</div>
-</div>
-<div style="text-align: center;">
-<div style="height: 38px; border-radius: 6px; background: #00ABE4; margin-bottom: 4px;"></div>
-<div style="font-size: 10px; font-weight: 700; color: #0F172A;">Info</div>
-<div style="font-size: 9px; color: #94A3B8;">#00ABE4</div>
-</div>
-<div style="text-align: center;">
-<div style="height: 38px; border-radius: 6px; background: #748B9F; margin-bottom: 4px;"></div>
-<div style="font-size: 10px; font-weight: 700; color: #0F172A;">Text Muted</div>
-<div style="font-size: 9px; color: #94A3B8;">#748B9F</div>
-</div>
-</div>
-</div>
-</div>
+---
 
-</div>
+### 02 Color Palette Tokens
 
-<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+> All color variables are defined once in [`frontend/src/index.css`](../frontend/src/index.css). Always reference `var(--token-name)`.
 
-<div style="flex: 1.2; min-width: 320px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #3B82F6; font-weight: 800; font-size: 16px;">03</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Typography</h3>
-</div>
-<p style="font-size: 12px; color: #64748B; margin: 0 0 10px;">We use Plus Jakarta Sans for a clean, institutional, and legible look.</p>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px; margin-bottom: 10px;">
-<span style="font-size: 24px; font-weight: 800; color: #0F172A;">Plus Jakarta Sans</span>
-<span style="font-size: 11px; color: #94A3B8; font-family: monospace;">0123456789</span>
-</div>
-<table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-<thead>
-<tr style="text-align: left; color: #94A3B8; border-bottom: 1px solid #F1F5F9;">
-<th style="padding: 6px 0;">Style</th>
-<th>Font Size</th>
-<th>Line Height</th>
-<th>Weight</th>
-</tr>
-</thead>
-<tbody style="color: #334155;">
-<tr style="border-bottom: 1px solid #F8FAFC;">
-<td style="padding: 6px 0; font-weight: 700;">H1 Display</td>
-<td>40px</td>
-<td>48px</td>
-<td style="font-weight: 800;">Bold</td>
-</tr>
-<tr style="border-bottom: 1px solid #F8FAFC;">
-<td style="padding: 6px 0; font-weight: 700;">H2 Title</td>
-<td>28px</td>
-<td>36px</td>
-<td style="font-weight: 700;">Bold</td>
-</tr>
-<tr style="border-bottom: 1px solid #F8FAFC;">
-<td style="padding: 6px 0; font-weight: 600;">H3 Section</td>
-<td>20px</td>
-<td>28px</td>
-<td style="font-weight: 600;">Semibold</td>
-</tr>
-<tr style="border-bottom: 1px solid #F8FAFC;">
-<td style="padding: 6px 0; font-weight: 600;">H4 Subtitle</td>
-<td>16px</td>
-<td>24px</td>
-<td>Medium</td>
-</tr>
-<tr style="border-bottom: 1px solid #F8FAFC;">
-<td style="padding: 6px 0;">Body</td>
-<td>15px</td>
-<td>24px</td>
-<td>Regular</td>
-</tr>
-<tr>
-<td style="padding: 6px 0; color: #64748B;">Caption</td>
-<td>13px</td>
-<td>20px</td>
-<td>Regular</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+#### Core Brand Colors
 
-<div style="flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 14px;">
+| Color Token | Visual Badge Preview | Hex Code | CSS Custom Property | Primary Application |
+| :--- | :---: | :---: | :---: | :--- |
+| **Primary Accent** | ![#00ABE4](https://img.shields.io/badge/Primary-%2300ABE4-00ABE4?style=for-the-badge) | `#00ABE4` | `var(--accent-primary)` | Main call-to-actions, active tab indicators, key metric highlights |
+| **Brand Turquoise** | ![#178582](https://img.shields.io/badge/Turquoise-%23178582-178582?style=for-the-badge) | `#178582` | `var(--brand-turquoise)` | Positive balances, savings surplus, investment gains, verified states |
+| **Navy Dark** | ![#0A1828](https://img.shields.io/badge/Navy_Dark-%230A1828-0A1828?style=for-the-badge) | `#0A1828` | `var(--bg-dark)` | Root viewport background canvas |
+| **Card Dark** | ![#0D1E33](https://img.shields.io/badge/Card_Dark-%230D1E33-0D1E33?style=for-the-badge) | `#0D1E33` | `var(--bg-card)` | Primary card panels, modal dialogs, drawer surfaces |
+| **Gold Tier** | ![#BFA181](https://img.shields.io/badge/Gold_Tier-%23BFA181-BFA181?style=for-the-badge) | `#BFA181` | `var(--gold-tier)` | Advisory recommendations, milestone celebrations, VIP badges |
+| **Canvas Light** | ![#E9F1FA](https://img.shields.io/badge/Canvas_Light-%23E9F1FA-E9F1FA?style=for-the-badge&logoColor=black) | `#E9F1FA` | `var(--bg-light)` | High-contrast light backgrounds and card borders |
 
-<div>
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-<span style="color: #F59E0B; font-weight: 800; font-size: 16px;">04</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Spacing</h3>
-</div>
-<p style="font-size: 12px; color: #64748B; margin: 0 0 8px;">Use an 8px spacing system for consistent layout.</p>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 14px; display: flex; align-items: flex-end; justify-content: space-between; gap: 6px;">
-<div style="text-align: center;"><div style="width: 14px; height: 4px; background: #FCE7F3; border-radius: 2px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">4px</span></div>
-<div style="text-align: center;"><div style="width: 16px; height: 8px; background: #FCE7F3; border-radius: 2px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">8px</span></div>
-<div style="text-align: center;"><div style="width: 20px; height: 16px; background: #FCE7F3; border-radius: 2px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">16px</span></div>
-<div style="text-align: center;"><div style="width: 24px; height: 24px; background: #FCE7F3; border-radius: 2px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">24px</span></div>
-<div style="text-align: center;"><div style="width: 28px; height: 32px; background: #FCE7F3; border-radius: 2px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">32px</span></div>
-<div style="text-align: center;"><div style="width: 32px; height: 48px; background: #FCE7F3; border-radius: 2px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">48px</span></div>
-<div style="text-align: center;"><div style="width: 36px; height: 64px; background: #FCE7F3; border-radius: 2px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">64px</span></div>
-</div>
-</div>
+#### Functional & Status Colors
 
-<div>
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-<span style="color: #10B981; font-weight: 800; font-size: 16px;">05</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Border Radius</h3>
-</div>
-<p style="font-size: 12px; color: #64748B; margin: 0 0 8px;">Use consistent radius values.</p>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 14px; display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-<div style="text-align: center;"><div style="width: 32px; height: 32px; background: #FCE7F3; border-radius: 4px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">4px</span></div>
-<div style="text-align: center;"><div style="width: 32px; height: 32px; background: #FCE7F3; border-radius: 8px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">8px</span></div>
-<div style="text-align: center;"><div style="width: 32px; height: 32px; background: #FCE7F3; border-radius: 12px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">12px</span></div>
-<div style="text-align: center;"><div style="width: 32px; height: 32px; background: #FCE7F3; border-radius: 16px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">16px</span></div>
-<div style="text-align: center;"><div style="width: 32px; height: 32px; background: #FCE7F3; border-radius: 24px; margin: 0 auto 4px;"></div><span style="font-size: 10px; color: #64748B;">24px</span></div>
-<div style="text-align: center;"><div style="width: 42px; height: 26px; background: #FCE7F3; border-radius: 9999px; margin: 3px auto 4px;"></div><span style="font-size: 10px; color: #64748B;">Full</span></div>
-</div>
-</div>
+| Semantic State | Visual Badge Preview | Hex Code | CSS Custom Property | Trigger Condition |
+| :--- | :---: | :---: | :---: | :--- |
+| **Success** | ![#178582](https://img.shields.io/badge/Success-%23178582-178582?style=for-the-badge) | `#178582` | `var(--status-success)` | Transaction verified, goal achieved, OTP accepted |
+| **Danger** | ![#E11D48](https://img.shields.io/badge/Danger-%23E11D48-E11D48?style=for-the-badge) | `#E11D48` | `var(--status-danger)` | Budget overrun, failed login lockout, transaction deleted |
+| **Warning** | ![#D97706](https://img.shields.io/badge/Warning-%23D97706-D97706?style=for-the-badge) | `#D97706` | `var(--status-warning)` | Spending approaching threshold, session inactivity countdown |
+| **Info** | ![#00ABE4](https://img.shields.io/badge/Info-%2300ABE4-00ABE4?style=for-the-badge) | `#00ABE4` | `var(--status-info)` | AI advisor guidance cards, statement upload hints |
+| **Muted** | ![#748B9F](https://img.shields.io/badge/Muted-%23748B9F-748B9F?style=for-the-badge) | `#748B9F` | `var(--text-muted)` | Helper copy, timestamps, inactive icons, table borders |
 
-</div>
+---
 
-</div>
+### 03 Typography Scale
 
-<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+We use **Plus Jakarta Sans** across the application, paired with monospace figures for financial ledgers.
 
-<div style="flex: 1.2; min-width: 320px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #6366F1; font-weight: 800; font-size: 16px;">06</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Components</h3>
-</div>
-<p style="font-size: 12px; color: #64748B; margin: 0 0 10px;">Reusable UI components for faster, consistent development.</p>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="margin-bottom: 14px;">
-<div style="font-size: 11px; font-weight: 700; color: #64748B; margin-bottom: 6px;">BUTTONS</div>
-<div style="display: flex; gap: 8px; flex-wrap: wrap;">
-<button style="background: linear-gradient(135deg, #00ABE4, #178582); color: white; border: none; padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">Primary Button</button>
-<button style="background: #F1F5F9; color: #334155; border: 1px solid #CBD5E1; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">Secondary</button>
-<button style="background: transparent; color: #64748B; border: none; padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">Ghost</button>
-</div>
-</div>
+| Role | Font Size | Line Height | Weight | Tailwind / CSS Utility | Example Usage |
+| :--- | :---: | :---: | :---: | :--- | :--- |
+| **H1 Display** | `40px` | `48px` | `800` Bold | `.text-display-h1` | Hero dashboard balances, page headlines |
+| **H2 Title** | `28px` | `36px` | `700` Bold | `.text-title-h2` | Section titles, major analytics cards |
+| **H3 Section** | `20px` | `28px` | `600` Semibold | `.text-section-h3` | Drawer headers, widget subheadings |
+| **H4 Subtitle**| `16px` | `24px` | `600` Medium | `.text-subtitle-h4` | Form section titles, card labels |
+| **Body Regular** | `15px` | `24px` | `400` Regular | `body, p` | Paragraphs, transaction descriptions |
+| **Caption** | `13px` | `20px` | `500` Regular | `.text-caption` | Timestamps, helper notes, table captions |
+| **Currency Mono** | `14px` | `20px` | `600` Tabular | `tabular-nums font-mono` | Ledger balances, monetary transaction values |
 
-<div style="margin-bottom: 14px;">
-<div style="font-size: 11px; font-weight: 700; color: #64748B; margin-bottom: 6px;">INPUT FIELD</div>
-<div>
-<input type="text" placeholder="Enter your email" readonly value="arjun@example.com" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border: 1px solid #CBD5E1; border-radius: 8px; font-size: 12px; color: #334155;" />
-</div>
-</div>
+---
 
-<div>
-<div style="font-size: 11px; font-weight: 700; color: #64748B; margin-bottom: 6px;">BADGES</div>
-<div style="display: flex; gap: 6px; flex-wrap: wrap;">
-<span style="background: #F1F5F9; color: #475569; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;">Default</span>
-<span style="background: rgba(23, 133, 130, 0.12); color: #178582; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;">Success</span>
-<span style="background: rgba(191, 161, 129, 0.2); color: #BFA181; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;">Warning</span>
-<span style="background: rgba(225, 29, 72, 0.1); color: #E11D48; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;">Error</span>
-<span style="background: rgba(0, 171, 228, 0.12); color: #00ABE4; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;">Info</span>
-</div>
-</div>
-</div>
-</div>
+### 04 Spacing Scale (8px Geometric Grid)
 
-<div style="flex: 1; min-width: 280px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #EC4899; font-weight: 800; font-size: 16px;">07</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Icons</h3>
-</div>
-<p style="font-size: 12px; color: #64748B; margin: 0 0 10px;">We use Lucide React for crisp, lightweight iconography.</p>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;">
-<div style="padding: 10px; background: #F8FAFC; border-radius: 8px;">
-<div style="font-size: 20px; margin-bottom: 2px;">🏠</div>
-<div style="font-size: 10px; color: #64748B;">Home</div>
-</div>
-<div style="padding: 10px; background: #F8FAFC; border-radius: 8px;">
-<div style="font-size: 20px; margin-bottom: 2px;">🔍</div>
-<div style="font-size: 10px; color: #64748B;">Search</div>
-</div>
-<div style="padding: 10px; background: #F8FAFC; border-radius: 8px;">
-<div style="font-size: 20px; margin-bottom: 2px;">👤</div>
-<div style="font-size: 10px; color: #64748B;">User</div>
-</div>
-<div style="padding: 10px; background: #F8FAFC; border-radius: 8px;">
-<div style="font-size: 20px; margin-bottom: 2px;">⚙️</div>
-<div style="font-size: 10px; color: #64748B;">Settings</div>
-</div>
-<div style="padding: 10px; background: #F8FAFC; border-radius: 8px;">
-<div style="font-size: 20px; margin-bottom: 2px;">🛡️</div>
-<div style="font-size: 10px; color: #64748B;">Security</div>
-</div>
-<div style="padding: 10px; background: #F8FAFC; border-radius: 8px;">
-<div style="font-size: 20px; margin-bottom: 2px;">💰</div>
-<div style="font-size: 10px; color: #64748B;">Wallet</div>
-</div>
-<div style="padding: 10px; background: #F8FAFC; border-radius: 8px;">
-<div style="font-size: 20px; margin-bottom: 2px;">✨</div>
-<div style="font-size: 10px; color: #64748B;">Advisor</div>
-</div>
-<div style="padding: 10px; background: #F8FAFC; border-radius: 8px;">
-<div style="font-size: 20px; margin-bottom: 2px;">🔔</div>
-<div style="font-size: 10px; color: #64748B;">Notifications</div>
-</div>
-</div>
-</div>
-</div>
+| Spacing Token | Pixel Value | Visual Density Bar | Common Application |
+| :--- | :---: | :--- | :--- |
+| `--space-xs` | `4px` | `█` | Inline chip padding, tight icon margins |
+| `--space-sm` | `8px` | `██` | Gap between button icon and label, list item padding |
+| `--space-md` | `16px` | `████` | Internal card padding on mobile, form input spacing |
+| `--space-lg` | `24px` | `██████` | Standard desktop card padding, layout gutters |
+| `--space-xl` | `32px` | `████████` | Section separators, dashboard headers |
+| `--space-2xl`| `48px` | `████████████` | Hero section top and bottom offsets |
+| `--space-3xl`| `64px` | `████████████████` | Page container padding on wide screens |
 
-</div>
+---
 
-<div style="margin-bottom: 24px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #10B981; font-weight: 800; font-size: 16px;">08</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Responsive Breakpoints</h3>
-</div>
-<p style="font-size: 12px; color: #64748B; margin: 0 0 10px;">Design for all screen sizes seamlessly.</p>
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="font-size: 26px; margin-bottom: 4px;">📱</div>
-<div style="font-size: 12px; font-weight: 700; color: #0F172A;">Mobile</div>
-<div style="font-size: 11px; color: #64748B;">&lt; 640px</div>
-</div>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="font-size: 26px; margin-bottom: 4px;">📲</div>
-<div style="font-size: 12px; font-weight: 700; color: #0F172A;">Tablet</div>
-<div style="font-size: 11px; color: #64748B;">640px – 1024px</div>
-</div>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="font-size: 26px; margin-bottom: 4px;">💻</div>
-<div style="font-size: 12px; font-weight: 700; color: #0F172A;">Laptop</div>
-<div style="font-size: 11px; color: #64748B;">1024px – 1440px</div>
-</div>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="font-size: 26px; margin-bottom: 4px;">🖥️</div>
-<div style="font-size: 12px; font-weight: 700; color: #0F172A;">Desktop</div>
-<div style="font-size: 11px; color: #64748B;">≥ 1440px</div>
-</div>
-</div>
-</div>
+### 05 Border Radius Tokens
+
+| Radius Token | Pixel Value | Visual Preview | Target Elements |
+| :--- | :---: | :---: | :--- |
+| `--radius-sm` | `4px` | `[ ▪ ]` | Inline code badges, tags, tooltips |
+| `--radius-md` | `8px` | `[ ◼ ]` | Input text boxes, action buttons, alert banners |
+| `--radius-lg` | `12px` | `( ◼ )` | Content cards, metric widgets, popovers |
+| `--radius-xl` | `16px` | `( ⬤ )` | Large modal dialogs, AI advisor drawer panel |
+| `--radius-full`| `9999px`| `(  ●  )` | User profile avatars, status pills, filter buttons |
+
+---
+
+### 06 Component Specifications
+
+| Component | Visual Representation on GitHub | Implementation Specification |
+| :--- | :---: | :--- |
+| **Primary Action Button** | <kbd>&nbsp;✦ Primary Button&nbsp;</kbd> | `background: linear-gradient(135deg, #00ABE4, #178582); color: #fff;` |
+| **Secondary Button** | <kbd>&nbsp;Secondary Action&nbsp;</kbd> | `border: 1px solid rgba(0, 171, 228, 0.4); background: transparent;` |
+| **Ghost Button** | <kbd>&nbsp;Dismiss&nbsp;</kbd> | `border: none; background: transparent; color: var(--text-muted);` |
+| **Input Field** | `[ ✉️ user@example.com ]` | `background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1);` |
+| **Badge: Verified** | `🟢 Verified` | `background: rgba(23, 133, 130, 0.15); color: #178582;` |
+| **Badge: Locked** | `🔴 Account Locked` | `background: rgba(225, 29, 72, 0.15); color: #E11D48;` |
+| **Badge: Warning** | `🟡 High Utilization` | `background: rgba(217, 119, 6, 0.15); color: #D97706;` |
+| **Badge: Info** | `🔵 AI Suggestion` | `background: rgba(0, 171, 228, 0.15); color: #00ABE4;` |
+
+---
+
+### 07 Iconography (Lucide React)
+
+| Navigation & System | Financial Operations | Analytics & AI | Status & Security |
+| :---: | :---: | :---: | :---: |
+| 🏠 `Home` | 💰 `Wallet` | 📊 `Analytics` | 🛡️ `Security` |
+| ⚙️ `Settings` | 💳 `Transactions` | 📈 `Forecasts` | 🔒 `Locked` |
+| 👤 `Profile` | 📄 `Statements` | ✨ `AI Advisor` | 🔔 `Alerts` |
+| 🔍 `Search` | 🎯 `Goals` | 🧠 `Reasoning` | ✅ `Verified` |
+
+---
+
+### 08 Responsive Breakpoints
+
+| Device Category | Visual Device | Viewport Width | Application Layout Strategy |
+| :--- | :---: | :---: | :--- |
+| **Mobile** | 📱 | `< 640px` | Single-column vertical stack, bottom navigation bar, full-screen modals |
+| **Tablet** | 📲 | `640px – 1024px` | 2-column metric cards, collapsed icon sidebar, floating advisor toggle |
+| **Laptop** | 💻 | `1024px – 1440px` | Full navigation sidebar, 3-column financial analytics, persistent drawer |
+| **Desktop** | 🖥️ | `≥ 1440px` | Expanded transaction ledger, multi-pane charts, widescreen workspace |

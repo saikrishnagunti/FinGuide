@@ -1,128 +1,121 @@
-<div align="right">
-<span style="background: #E0F2FE; color: #0369A1; padding: 5px 16px; border-radius: 9999px; font-size: 12px; font-weight: 700; letter-spacing: 0.2px;">AI Financial Intelligence & Wealth OS</span>
-</div>
-
 # FinGuide
-<p style="color: #64748B; font-size: 16px; margin-top: -6px;">Autonomous personal financial advisory, bank statement verification, and predictive wealth forecasting powered by <strong>Gemini 3.5 Flash Lite</strong>.</p>
+
+<div align="center">
+
+![FinGuide Banner](https://img.shields.io/badge/FinGuide-AI_Financial_Intelligence_&_Wealth_OS-00ABE4?style=for-the-badge&logo=googlecloud&logoColor=white)
+
+[![React 19](https://img.shields.io/badge/React-19_Vite-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Node Express](https://img.shields.io/badge/Node.js-Express_Gateway-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://expressjs.com/)
+[![Python FastAPI](https://img.shields.io/badge/FastAPI-AI_Intelligence-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Turso libSQL](https://img.shields.io/badge/Turso-Cloud_Database-4FF8D2?style=flat-square&logo=sqlite&logoColor=black)](https://turso.tech/)
+[![Google Gemini](https://img.shields.io/badge/Gemini_3.5-Flash_Lite-8E75B2?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Brevo API](https://img.shields.io/badge/Brevo-Email_OTP-0B99FF?style=flat-square)](https://www.brevo.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+
+<p><em>Autonomous personal financial advisory, bank statement verification, and predictive wealth forecasting powered by <strong>Google Gemini 3.5 Flash Lite</strong>.</em></p>
+
+</div>
 
 ---
 
-<div style="margin-bottom: 24px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-<span style="color: #9333EA; font-weight: 800; font-size: 16px;">📚</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Official Documentation Directory</h3>
-</div>
+### 📚 Official Documentation Directory
 
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-<thead>
-<tr style="text-align: left; color: #64748B; border-bottom: 1px solid #E2E8F0;">
-<th style="padding: 8px 0;">Document</th>
-<th>Badge</th>
-<th>Summary & Purpose</th>
-</tr>
-</thead>
-<tbody style="color: #334155;">
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 10px 0;"><a href="docs/PRD.md" style="color: #00ABE4; font-weight: 700; text-decoration: none;">📄 PRD.md</a></td>
-<td><span style="background: #F3E8FF; color: #7E22CE; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">Product Goals</span></td>
-<td>Product requirements, target personas, problem statement, and success metrics.</td>
-</tr>
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 10px 0;"><a href="docs/AGENTS.md" style="color: #00ABE4; font-weight: 700; text-decoration: none;">🤖 AGENTS.md</a></td>
-<td><span style="background: #FDF2F8; color: #BE185D; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">Agent Rules</span></td>
-<td>Guidelines for AI coding assistants: rules, checklist, and standard practices.</td>
-</tr>
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 10px 0;"><a href="docs/DESIGN_SYSTEM.md" style="color: #00ABE4; font-weight: 700; text-decoration: none;">🎨 DESIGN_SYSTEM.md</a></td>
-<td><span style="background: #ECFDF5; color: #047857; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">Design Tokens</span></td>
-<td>Drone Blue color palette, Plus Jakarta Sans typography, 8px grid, and components.</td>
-</tr>
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 10px 0;"><a href="docs/ARCHITECTURE.md" style="color: #00ABE4; font-weight: 700; text-decoration: none;">🏛️ ARCHITECTURE.md</a></td>
-<td><span style="background: #EFF6FF; color: #1D4ED8; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">System Topology</span></td>
-<td>Three-tier architecture, folder tree, end-to-end data flows, and scalability.</td>
-</tr>
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 10px 0;"><a href="docs/SECURITY.md" style="color: #00ABE4; font-weight: 700; text-decoration: none;">🛡️ SECURITY.md</a></td>
-<td><span style="background: #FEE2E2; color: #B91C1C; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">Zero Trust</span></td>
-<td>Two-step OTP, 15m lockout cooldown, inactivity logout, and threat mitigations.</td>
-</tr>
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 10px 0;"><a href="docs/CODE_STYLE.md" style="color: #00ABE4; font-weight: 700; text-decoration: none;">💻 CODE_STYLE.md</a></td>
-<td><span style="background: #E0E7FF; color: #4338CA; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">Engineering</span></td>
-<td>JavaScript/React rules, Python/FastAPI conventions, and database standards.</td>
-</tr>
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 10px 0;"><a href="docs/TESTING.md" style="color: #00ABE4; font-weight: 700; text-decoration: none;">🧪 TESTING.md</a></td>
-<td><span style="background: #FEF3C7; color: #B45309; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">Quality Assurance</span></td>
-<td>Test pyramid, backend integration scripts, Playwright visual tests, and pre-deploy checklist.</td>
+| Document | Category Badge | Purpose & Scope |
+| :--- | :---: | :--- |
+| [📄 **`PRD.md`**](docs/PRD.md) | ![Goals](https://img.shields.io/badge/PRD-Product_Goals-7E22CE?style=flat-square) | Product requirements, user personas, problem statement, and success KPIs. |
+| [🤖 **`AGENTS.md`**](docs/AGENTS.md) | ![Rules](https://img.shields.io/badge/Agents-Team_Rules-BE185D?style=flat-square) | Operational guidelines, checklists, and conventions for AI pair programmers. |
+| [🎨 **`DESIGN_SYSTEM.md`**](docs/DESIGN_SYSTEM.md) | ![Tokens](https://img.shields.io/badge/Design-Tokens_&_UI-047857?style=flat-square) | Drone Blue color palette, typography scale, 8px grid, and component specs. |
+| [🏛️ **`ARCHITECTURE.md`**](docs/ARCHITECTURE.md) | ![Topology](https://img.shields.io/badge/Arch-Three--Tier-1D4ED8?style=flat-square) | Distributed system topology, folder structure, end-to-end data flows, and scaling. |
+| [🛡️ **`SECURITY.md`**](docs/SECURITY.md) | ![Security](https://img.shields.io/badge/Security-Zero_Trust-B91C1C?style=flat-square) | Two-step OTP, 15m lockout cooldown, idle auto-logout, and audit logging trail. |
+| [💻 **`CODE_STYLE.md`**](docs/CODE_STYLE.md) | ![Code](https://img.shields.io/badge/Code-Standards-4338CA?style=flat-square) | React 19 conventions, Python FastAPI standards, and database query safety. |
+| [🧪 **`TESTING.md`**](docs/TESTING.md) | ![Testing](https://img.shields.io/badge/QA-Test_Pyramid-B45309?style=flat-square) | Test pyramid, backend integration scripts, Playwright visual tests, and checklists. |
+| [🚀 **`DEPLOYMENT.md`**](docs/DEPLOYMENT.md) | ![Cloud](https://img.shields.io/badge/Cloud-Production-0369A1?style=flat-square) | Production topology (Vercel + Render), Turso cloud libSQL, and secret configs. |
+
+---
+
+### 🏛️ System Architecture
+
+```mermaid
+flowchart LR
+    subgraph Client ["Client Presentation"]
+        Browser["👤 Web & Mobile Browser"]
+    end
+
+    subgraph FrontendTier ["Tier 1: Frontend (SPA)"]
+        ReactApp["💻 React 19 + Vite<br/>• Vanilla CSS Design Tokens<br/>• Session Guard & Inactivity Timer<br/>(Hosted on Vercel CDN)"]
+    end
+
+    subgraph GatewayTier ["Tier 2: API Gateway"]
+        ExpressApp["⚙️ Node.js Express Gateway<br/>• JWT Authentication & Bcrypt<br/>• Helmet Security & Rate Limiting<br/>• Audit Logging Trail<br/>(Hosted on Render)"]
+    end
+
+    subgraph AgentTier ["Tier 3: AI Intelligence Engine"]
+        FastAPIApp["🤖 Python FastAPI Service<br/>• pdfplumber Statement Parser<br/>• statsmodels ARIMA Forecasts<br/>• ReAct Reasoning Loop<br/>(Hosted on Render)"]
+    end
+
+    subgraph ExternalCloud ["Managed Cloud Services"]
+        TursoDB[("☁️ Turso Cloud Database<br/>(libSQL Edge Persistence)")]
+        BrevoAPI["📧 Brevo Email API<br/>(HTTPS Port 443 OTPs)"]
+        GeminiAI["🧠 Google AI Studio<br/>(Gemini 3.5 Flash Lite)"]
+    end
+
+    Browser -->|HTTPS REST| ReactApp
+    ReactApp -->|REST API / JSON| ExpressApp
+    ExpressApp -->|Internal HTTP| FastAPIApp
+    ExpressApp -->|libSQL over TLS| TursoDB
+    ExpressApp -->|HTTPS API| BrevoAPI
+    FastAPIApp -->|REST API| GeminiAI
+```
+
+---
+
+### ⚡ Quick Start Guide
+
+<table width="100%">
+<tr>
+<th width="33%" align="left">1️⃣ STEP 1: AI Agent</th>
+<th width="33%" align="left">2️⃣ STEP 2: Gateway Server</th>
+<th width="33%" align="left">3️⃣ STEP 3: Frontend Client</th>
 </tr>
 <tr>
-<td style="padding: 10px 0;"><a href="docs/DEPLOYMENT.md" style="color: #00ABE4; font-weight: 700; text-decoration: none;">🚀 DEPLOYMENT.md</a></td>
-<td><span style="background: #E0F2FE; color: #0369A1; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">Cloud & Production</span></td>
-<td>Cloud hosting, Turso cloud database reality, GitHub data isolation, and secrets.</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+<td valign="top">
 
-<div style="margin-bottom: 24px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-<span style="color: #3B82F6; font-weight: 800; font-size: 16px;">🏛️</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Three-Tier Architecture</h3>
-</div>
-
-<div style="background: #0F172A; border-radius: 14px; padding: 20px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12px; color: #E2E8F0; line-height: 1.8; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div><span style="color: #38BDF8;">React 19 + Vite Frontend (Port 5173 / Vercel Edge)</span></div>
-<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│</div>
-<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼ <span style="color: #94A3B8;">HTTPS REST API / Reverse Proxy</span></div>
-<div><span style="color: #4ADE80;">Node.js Express Gateway (Port 5000 / Render)</span></div>
-<div>&nbsp;&nbsp;├── Turso Cloud libSQL Database (Live Cloud Sync + Local Fallback)</div>
-<div>&nbsp;&nbsp;├── Helmet Security Headers & Tiered Rate Limiting</div>
-<div>&nbsp;&nbsp;└── Brevo HTTPS API Email Delivery (Port 443 OTPs)</div>
-<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│</div>
-<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼ <span style="color: #94A3B8;">Internal HTTP JSON</span></div>
-<div><span style="color: #A78BFA;">Python FastAPI Intelligence Service (Port 8000 / Render)</span></div>
-<div>&nbsp;&nbsp;├── pdfplumber Table Extraction Engine</div>
-<div>&nbsp;&nbsp;├── statsmodels (ARIMA / SARIMA / ETS Forecasting)</div>
-<div>&nbsp;&nbsp;└── Google Gemini 3.5 Flash Lite Reasoning Engine</div>
-</div>
-</div>
-
-<div style="margin-bottom: 24px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-<span style="color: #10B981; font-weight: 800; font-size: 16px;">⚡</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Quick Start Guide</h3>
-</div>
-
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-<div style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 12px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="font-size: 11px; font-weight: 800; color: #7C3AED; margin-bottom: 8px;">STEP 1: AGENT</div>
-<div style="font-family: monospace; font-size: 11px; color: #334155; line-height: 1.7;">
-cd agent<br/>
-pip install -r requirements.txt<br/>
+```bash
+cd agent
+pip install -r requirements.txt
 uvicorn app.main:app --port 8000
-</div>
-</div>
+```
 
-<div style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 12px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="font-size: 11px; font-weight: 800; color: #059669; margin-bottom: 8px;">STEP 2: SERVER</div>
-<div style="font-family: monospace; font-size: 11px; color: #334155; line-height: 1.7;">
-cd server<br/>
-npm install<br/>
-npm run dev
-</div>
-</div>
+</td>
+<td valign="top">
 
-<div style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 12px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="font-size: 11px; font-weight: 800; color: #0284C7; margin-bottom: 8px;">STEP 3: FRONTEND</div>
-<div style="font-family: monospace; font-size: 11px; color: #334155; line-height: 1.7;">
-cd frontend<br/>
-npm install<br/>
+```bash
+cd server
+npm install
 npm run dev
-</div>
-</div>
-</div>
-</div>
+```
+
+</td>
+<td valign="top">
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+</td>
+</tr>
+</table>
+
+Open [**http://localhost:5173**](http://localhost:5173) in your browser.
+
+---
+
+### 🛡️ Production Security Highlights
+
+- 🔒 **Zero-Knowledge Statement Ingestion**: Bank statements are processed in-memory; online banking credentials are never requested or stored.
+- 📧 **Two-Step Email OTP**: One-time codes sent via Brevo HTTPS API (port 443) authenticate registrations and password changes.
+- ⏱️ **Brute-Force Lockout**: 5 failed login attempts trigger an automatic 15-minute cooldown timer.
+- 🔔 **Inactivity Auto-Logout**: Unattended sessions automatically prompt after 13 minutes and log out at 15 minutes.
+- ☁️ **Cloud Database Isolation**: User records reside exclusively in encrypted **Turso Cloud** storage; zero personal financial data ever enters Git.

@@ -1,177 +1,139 @@
-<div align="right">
-<span style="background: #FEE2E2; color: #B91C1C; padding: 5px 16px; border-radius: 9999px; font-size: 12px; font-weight: 700; letter-spacing: 0.2px;">Zero trust. Defense in depth. Private.</span>
-</div>
+# 🛡️ Security Architecture
 
-# 🛡️ SECURITY.md
-# Security Architecture
-<p style="color: #64748B; font-size: 16px; margin-top: -6px;">Threat model, authentication protocols, rate limiting, and data privacy safeguards.</p>
+<div align="center">
+
+![Zero Trust](https://img.shields.io/badge/Security-Zero_Trust_Perimeter-B91C1C?style=for-the-badge&logo=auth0&logoColor=white)
+![OTP](https://img.shields.io/badge/Auth-Two--Step_Email_OTP-00ABE4?style=for-the-badge)
+![Lockout](https://img.shields.io/badge/Brute_Force-15m_Lockout_Cooldown-E11D48?style=for-the-badge)
+![Idle Logout](https://img.shields.io/badge/Session-15m_Idle_Auto--Logout-D97706?style=for-the-badge)
+![Audit Trail](https://img.shields.io/badge/Audit-Tamper--Evident_Log-178582?style=for-the-badge)
+
+<p><em>Defense-in-depth security model, authentication protocols, rate limiting, and data privacy safeguards.</em></p>
+
+</div>
 
 ---
 
-<div style="margin-bottom: 24px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-<span style="color: #9333EA; font-weight: 800; font-size: 16px;">01</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Core Security Principles</h3>
-</div>
+### 01 Core Security Principles
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-<div style="background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 12px; padding: 16px;">
-<div style="font-size: 22px; margin-bottom: 4px;">🛡️</div>
-<div style="font-size: 13px; font-weight: 700; color: #1E40AF; margin-bottom: 4px;">Defense in Depth</div>
-<div style="font-size: 11px; color: #3B82F6; line-height: 1.4;">Multiple overlapping layers: rate limiting, OTPs, lockout, and idle session auto-logout.</div>
-</div>
+```mermaid
+flowchart TD
+    subgraph Perimeter ["1. Perimeter Defense"]
+        RateLimit["API Rate Limiting<br/>(300 req/15m Global, 20/15m Auth)"]
+        Helmet["HTTP Security Headers<br/>(CSP, Anti-Clickjacking DENY, nosniff)"]
+    end
 
-<div style="background: #F0FDF4; border: 1px solid #DCFCE7; border-radius: 12px; padding: 16px;">
-<div style="font-size: 22px; margin-bottom: 4px;">🔒</div>
-<div style="font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 4px;">Zero-Knowledge Ingestion</div>
-<div style="font-size: 11px; color: #16A34A; line-height: 1.4;">Bank statements are parsed securely in memory. No banking passwords are ever requested.</div>
-</div>
+    subgraph Authentication ["2. Access & Identity"]
+        Bcrypt["bcrypt Password Hash<br/>(Cost Factor = 12)"]
+        OTP["Two-Step Email OTP<br/>(10m Expiry, Brevo HTTPS)"]
+        Lockout["Brute-Force Lockout<br/>(5 Failed Attempts = 15m Cooldown)"]
+    end
 
-<div style="background: #FAF5FF; border: 1px solid #E9D5FF; border-radius: 12px; padding: 16px;">
-<div style="font-size: 22px; margin-bottom: 4px;">👤</div>
-<div style="font-size: 13px; font-weight: 700; color: #6B21A8; margin-bottom: 4px;">Human Confirmation</div>
-<div style="font-size: 11px; color: #9333EA; line-height: 1.4;">AI cannot create or modify budgets or goals without the user clicking explicit approval.</div>
-</div>
+    subgraph ActiveSession ["3. Session Integrity"]
+        JWT["Signed JWT Auth Tokens<br/>(Short-lived, TLS 1.3 only)"]
+        Inactivity["Idle Detection<br/>(13m Warning, 15m Auto-Logout)"]
+    end
 
-<div style="background: #FFFBEB; border: 1px solid #FEF3C7; border-radius: 12px; padding: 16px;">
-<div style="font-size: 22px; margin-bottom: 4px;">📜</div>
-<div style="font-size: 13px; font-weight: 700; color: #92400E; margin-bottom: 4px;">Audit Accountability</div>
-<div style="font-size: 11px; color: #B45309; line-height: 1.4;">Tamper-evident logs record logins, password updates, exports, and account changes.</div>
-</div>
-</div>
-</div>
+    subgraph Governance ["4. Data & Action Governance"]
+        HITL["Human-in-the-Loop Confirmation<br/>(AI cannot execute unilateral writes)"]
+        AuditLog["Tamper-Evident Security Audit Trail<br/>(Logged to Turso Cloud DB)"]
+    end
 
-<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+    Perimeter --> Authentication
+    Authentication --> ActiveSession
+    ActiveSession --> Governance
+```
 
-<div style="flex: 1; min-width: 280px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #EC4899; font-weight: 800; font-size: 16px;">02</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Password Policy</h3>
-</div>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 8px;">Enforced Criteria:</div>
-<div style="font-size: 12px; color: #334155; line-height: 1.8;">
-<div>✔ <strong>Min 8 characters</strong> in length</div>
-<div>✔ <strong>Uppercase letter</strong> (A&ndash;Z)</div>
-<div>✔ <strong>Lowercase letter</strong> (a&ndash;z)</div>
-<div>✔ <strong>Number</strong> (0&ndash;9)</div>
-<div>✔ <strong>Special symbol</strong> (!@#$%^&*...)</div>
-</div>
-<div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #F1F5F9; font-size: 11px; color: #64748B;">
-🔒 Hashed with <strong>bcrypt</strong> (cost factor = 12). Raw passwords never hit logs or persistent disk storage.
-</div>
-</div>
-</div>
+---
 
-<div style="flex: 1; min-width: 280px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #3B82F6; font-weight: 800; font-size: 16px;">03</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Two-Step Email OTP</h3>
-</div>
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: #334155;">
-<div style="background: #F8FAFC; padding: 8px 12px; border-radius: 8px; border: 1px solid #E2E8F0;">
-<strong>Account Registration:</strong> Code sent to confirm email before account creation.
-</div>
-<div style="background: #F8FAFC; padding: 8px 12px; border-radius: 8px; border: 1px solid #E2E8F0;">
-<strong>Forgot Password:</strong> 6-digit one-time code required before password reset.
-</div>
-<div style="background: #F8FAFC; padding: 8px 12px; border-radius: 8px; border: 1px solid #E2E8F0;">
-<strong>Settings Password Change:</strong> Email verification required to change password.
-</div>
-</div>
-<div style="margin-top: 10px; font-size: 11px; color: #64748B;">
-⏱️ 10-minute expiry &bull; 5-attempt anti-brute force revocation &bull; Single-use consumption
-</div>
-</div>
-</div>
-
-</div>
-
-<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
-
-<div style="flex: 1; min-width: 280px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #E11D48; font-weight: 800; font-size: 16px;">04</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Failed Login Lockout</h3>
-</div>
-<div style="background: #FFF1F2; border: 1px solid #FFE4E6; border-radius: 14px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-<span style="font-size: 18px;">⏱️</span>
-<strong style="color: #9F1239; font-size: 13px;">15-Minute Cooldown Lockout</strong>
-</div>
-<p style="font-size: 12px; color: #881337; line-height: 1.5; margin: 0 0 10px;">
-Tracks consecutive failed attempts by IP and email. Upon the <strong>5th failed attempt</strong>, authentication is temporarily locked out for 15 minutes.
-</p>
-<div style="background: #FFFFFF; border: 1px solid #FECDD3; border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #9F1239;">
-UI features a live countdown timer banner and locks the submit button until cooldown expires.
-</div>
-</div>
-</div>
-
-<div style="flex: 1; min-width: 280px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #F59E0B; font-weight: 800; font-size: 16px;">05</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Inactivity Auto-Logout</h3>
-</div>
-<div style="background: #FFFBEB; border: 1px solid #FEF3C7; border-radius: 14px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-<span style="font-size: 18px;">🔔</span>
-<strong style="color: #92400E; font-size: 13px;">15-Minute Idle Detection</strong>
-</div>
-<p style="font-size: 12px; color: #78350F; line-height: 1.5; margin: 0 0 10px;">
-Monitors mouse movement, typing, and scrolling. If no activity is detected for 13 minutes, a countdown warning modal appears for 120 seconds.
-</p>
-<div style="background: #FFFFFF; border: 1px solid #FDE68A; border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #92400E;">
-Users can click "Keep Working" or the system safely logs out to keep ledger records private.
-</div>
-</div>
-</div>
-
-</div>
-
-<div style="margin-bottom: 24px;">
-<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-<span style="color: #6366F1; font-weight: 800; font-size: 16px;">06</span>
-<h3 style="color: #0F172A; margin: 0; font-size: 16px;">Security Audit Trail</h3>
-</div>
-
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-<table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-<thead>
-<tr style="text-align: left; color: #64748B; border-bottom: 1px solid #E2E8F0;">
-<th style="padding: 8px 0;">Action Name</th>
-<th>User-Facing Badge</th>
-<th>Trigger Description</th>
-</tr>
-</thead>
-<tbody style="color: #334155;">
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 8px 0; font-family: monospace;">LOGIN_SUCCESS</td>
-<td><span style="background: rgba(23, 133, 130, 0.12); color: #178582; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">Signed In</span></td>
-<td>User authenticated with valid password</td>
-</tr>
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 8px 0; font-family: monospace;">LOGIN_FAILED</td>
-<td><span style="background: rgba(225, 29, 72, 0.1); color: #E11D48; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">Sign-In Failed</span></td>
-<td>Incorrect password submitted</td>
-</tr>
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 8px 0; font-family: monospace;">ACCOUNT_LOCKED</td>
-<td><span style="background: rgba(225, 29, 72, 0.1); color: #E11D48; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">Account Locked</span></td>
-<td>15m cooldown initiated after 5 failed attempts</td>
-</tr>
-<tr style="border-bottom: 1px solid #F1F5F9;">
-<td style="padding: 8px 0; font-family: monospace;">PASSWORD_CHANGED</td>
-<td><span style="background: rgba(23, 133, 130, 0.12); color: #178582; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">Password Changed</span></td>
-<td>Password updated with verified email authorization code</td>
+<table width="100%">
+<tr>
+<th width="50%" align="left">🔑 02 Password Policy</th>
+<th width="50%" align="left">📧 03 Two-Step Email OTP</th>
 </tr>
 <tr>
-<td style="padding: 8px 0; font-family: monospace;">DATA_EXPORTED</td>
-<td><span style="background: rgba(0, 171, 228, 0.12); color: #00ABE4; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">Backup Downloaded</span></td>
-<td>User downloaded JSON or CSV financial backup</td>
+<td valign="top">
+
+All user passwords must satisfy these strict requirements:
+- [x] **Minimum 8 characters** in length
+- [x] **Uppercase letter** (`A–Z`)
+- [x] **Lowercase letter** (`a–z`)
+- [x] **Numeric digit** (`0–9`)
+- [x] **Special symbol** (`!@#$%^&*()_+-=...`)
+
+> [!NOTE]
+> Passwords are encrypted using **bcrypt** (cost factor = 12). Plaintext passwords are never logged, printed, or saved unencrypted.
+
+</td>
+<td valign="top">
+
+Mandatory one-time codes (OTP) protect critical flows:
+- **Registration**: Confirms user owns the email address
+- **Forgot Password**: Verification required to reset credentials
+- **Settings Password Change**: Email authorization code needed
+
+> [!TIP]
+> Delivered via **Brevo HTTPS API** over port 443 &bull; 10-minute expiry &bull; 5-attempt anti-brute force revocation &bull; Single-use consumption.
+
+</td>
 </tr>
-</tbody>
 </table>
-</div>
-</div>
+
+---
+
+<table width="100%">
+<tr>
+<th width="50%" align="left">⏱️ 04 Failed Login Lockout & Cooldown</th>
+<th width="50%" align="left">🔔 05 Session Inactivity Auto-Logout</th>
+</tr>
+<tr>
+<td valign="top">
+
+- **Attempt Tracking**: Consecutive failed logins are tracked by IP address and email.
+- **5-Strike Lockout**: On the 5th failed attempt, the account enters a **15-minute cooldown lockout**.
+- **Frontend Timer**: Submit button is disabled and a live countdown timer displays remaining cooldown seconds.
+- **Reset**: Successful login immediately resets the failure counter to 0.
+
+</td>
+<td valign="top">
+
+- **Activity Listeners**: Monitors mouse movements, keyboard typing, and window scrolling.
+- **13-Minute Warning**: After 13 minutes of inactivity, a warning modal appears with a **120-second countdown**.
+- **User Control**: Users can click *"Keep Working"* to reset the timer, or let it expire to trigger safe token revocation and redirection to login.
+
+</td>
+</tr>
+</table>
+
+---
+
+### 06 HTTP Headers & Rate Limiting
+
+The API Gateway enforces tiered rate limits via `express-rate-limit`:
+
+| Route Category | Window | Max Requests | Purpose |
+| :--- | :---: | :---: | :--- |
+| **Global API** (`/api/*`) | 15 minutes | 300 requests | DDoS and bot mitigation |
+| **Auth Routes** (`/api/auth/*`) | 15 minutes | 20 requests | Defense against credential stuffing |
+| **OTP Verification** (`/api/auth/verify-otp`) | 15 minutes | 25 requests | Prevention of code enumeration |
+
+#### Security Headers (via Helmet)
+- `X-Frame-Options: DENY` (Blocks embedding inside malicious `<iframe>` tags)
+- `X-Content-Type-Options: nosniff` (Prevents MIME sniffing attacks)
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains` (Enforces HTTPS)
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+---
+
+### 07 Tamper-Evident Security Audit Log
+
+All critical mutations are recorded in the `security_logs` table:
+
+| Action Identifier | User-Facing Badge | Trigger Description |
+| :--- | :---: | :--- |
+| `LOGIN_SUCCESS` | `🟢 Signed In` | User authenticated with valid password |
+| `LOGIN_FAILED` | `🔴 Sign-In Failed` | Incorrect password submitted |
+| `ACCOUNT_LOCKED` | `🔴 Account Locked` | 15m cooldown initiated after 5 failed attempts |
+| `PASSWORD_CHANGED` | `🟢 Password Changed` | Password updated with verified email authorization code |
+| `DATA_EXPORTED` | `🔵 Backup Downloaded` | User downloaded a JSON or CSV financial backup |
+| `SNAPSHOT_CREATED` | `🟢 Budget Created` | New monthly budget snapshot registered |
