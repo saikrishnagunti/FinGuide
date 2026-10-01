@@ -3,6 +3,7 @@ import db from '../database.js';
 import { agentClient } from '../services/agent-client.js';
 import { generateFallbackAudit } from '../services/audit-fallback.js';
 import { runFallbackReactAdvisor } from '../services/react-fallback.js';
+import { runGeminiAdvisor } from '../services/gemini-advisor.js';
 import { computeStatisticalForecast } from '../services/forecast-fallback.js';
 import { generateFallbackBudget } from '../services/budget-fallback.js';
 
@@ -114,6 +115,26 @@ router.post('/chat', async (req, res) => {
       };
     });
 
+    // 1. Primary: Direct Gemini AI Financial Advisor
+    try {
+      const geminiResult = await runGeminiAdvisor({
+        message,
+        user,
+        snapshots: parsedSnapshots,
+        transactions,
+        goals,
+        conversation_history: conversation_history || [],
+      });
+      return res.json({
+        ...geminiResult,
+        reply: geminiResult.raw_text,
+        response: geminiResult.raw_text,
+      });
+    } catch (geminiErr) {
+      console.warn('[AgentRoute] Gemini advisor error:', geminiErr.message, '— checking Python agent microservice.');
+    }
+
+    // 2. Secondary: Python AI Advisor Microservice
     try {
       const result = await agentClient.chat({
         user_context: {
@@ -132,24 +153,18 @@ router.post('/chat', async (req, res) => {
 
       return res.json(result);
     } catch (agentErr) {
-      console.warn('[AgentRoute] Python AI advisor unreachable:', agentErr.message, '— returning resilient advisory response.');
-      const latest = parsedSnapshots[0];
-      const inc = latest?.total_income || 0;
-      const exp = latest?.total_expenses || 0;
-      const net = inc - exp;
-      const rate = inc > 0 ? Math.round((net / inc) * 100) : 0;
-      const currency = user?.currency || '₹';
-
-      const reply = `Hello ${user?.name || 'there'}! Based on your verified financial records, your current monthly operating income is ${currency}${inc.toLocaleString('en-IN')} and expenditures are ${currency}${exp.toLocaleString('en-IN')}, generating a net cash flow of ${net >= 0 ? '+' : ''}${currency}${net.toLocaleString('en-IN')} (${rate}% savings rate).\n\nKey Recommendations:\n1. **Monitor Vendor Concentration**: Keep single-vendor and inventory outflows under 30% of total burn.\n2. **Surplus Reinvestment**: Allocate ongoing positive operational cash flow toward your liquid emergency reserve.\n3. **Debt Servicing Alignment**: Align collection settlement dates with loan EMI obligations to maintain seamless liquidity.`;
-
+      console.warn('[AgentRoute] Python AI advisor unreachable:', agentErr.message, '— falling back to offline advisor.');
+      const fallbackResult = runFallbackReactAdvisor({
+        message,
+        user,
+        snapshots: parsedSnapshots,
+        transactions,
+        goals,
+      });
       return res.json({
-        response: reply,
-        reply,
-        insights: [
-          `Audited monthly cash flow: ${currency}${net.toLocaleString('en-IN')}`,
-          `Savings retention rate: ${rate}%`,
-        ],
-        status: 'ok',
+        ...fallbackResult,
+        reply: fallbackResult.raw_text,
+        response: fallbackResult.raw_text,
       });
     }
   } catch (err) {
@@ -178,12 +193,38 @@ router.post('/react', async (req, res) => {
       'SELECT * FROM goals WHERE user_id = ? AND status = "active"'
     ).all(userId);
 
-    const parsedSnapshots = snapshots.map(s => ({
-      ...s,
-      income_data: JSON.parse(s.income_data),
-      expense_data: JSON.parse(s.expense_data),
-    }));
+    const parsedSnapshots = snapshots.map(s => {
+      let income_data = {};
+      let expense_data = {};
+      try { income_data = typeof s.income_data === 'string' ? JSON.parse(s.income_data) : (s.income_data || {}); } catch {}
+      try { expense_data = typeof s.expense_data === 'string' ? JSON.parse(s.expense_data) : (s.expense_data || {}); } catch {}
+      return {
+        ...s,
+        income_data,
+        expense_data,
+      };
+    });
 
+    // 1. Primary: Direct Gemini AI Financial Advisor
+    try {
+      const geminiResult = await runGeminiAdvisor({
+        message,
+        user,
+        snapshots: parsedSnapshots,
+        transactions,
+        goals,
+        conversation_history: conversation_history || [],
+      });
+      return res.json({
+        ...geminiResult,
+        reply: geminiResult.raw_text,
+        response: geminiResult.raw_text,
+      });
+    } catch (geminiErr) {
+      console.warn('[AgentRoute] Gemini advisor error:', geminiErr.message, '— checking Python agent microservice.');
+    }
+
+    // 2. Secondary: Python AI ReAct service
     try {
       const result = await agentClient.reactChat({
         user_context: { name: user.name, currency: user.currency || '₹', is_logged_in: true },
@@ -198,7 +239,7 @@ router.post('/react', async (req, res) => {
 
       return res.json(result);
     } catch (agentErr) {
-      console.warn('[AgentRoute] Python AI ReAct service unreachable:', agentErr.message, '— executing resilient ReAct engine.');
+      console.warn('[AgentRoute] Python AI ReAct service unreachable:', agentErr.message, '— executing resilient offline ReAct engine.');
       const fallbackResult = runFallbackReactAdvisor({
         message,
         user,

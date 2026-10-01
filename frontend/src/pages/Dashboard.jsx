@@ -185,6 +185,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [forecastLoading, setForecastLoading] = useState(false);
   const { isDark } = useTheme();
+  const [chartView, setChartView] = useState('area'); // 'area' | 'bar' | 'net'
   const [timeRange, setTimeRange] = useState(() => {
     try {
       return localStorage.getItem('finguide_time_range') || 'all';

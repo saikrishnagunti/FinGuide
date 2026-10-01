@@ -28,6 +28,7 @@ const config = {
   tursoDatabaseUrl: process.env.TURSO_DATABASE_URL || '',
   tursoAuthToken: process.env.TURSO_AUTH_TOKEN || '',
   agentServiceUrl: sanitizeUrl(process.env.AGENT_SERVICE_URL, 'http://127.0.0.1:8000'),
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
   uploadDir: process.env.UPLOAD_DIR || './data/uploads',
   jwtExpiresIn: '7d',
   corsOrigin: process.env.CORS_ORIGIN || '',
