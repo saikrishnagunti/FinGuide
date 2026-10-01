@@ -25,6 +25,8 @@ const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   secretKey: process.env.SECRET_KEY || 'dev-secret-key-change-me',
   databasePath: process.env.DATABASE_PATH || './data/finguide.db',
+  tursoDatabaseUrl: process.env.TURSO_DATABASE_URL || '',
+  tursoAuthToken: process.env.TURSO_AUTH_TOKEN || '',
   agentServiceUrl: sanitizeUrl(process.env.AGENT_SERVICE_URL, 'http://127.0.0.1:8000'),
   uploadDir: process.env.UPLOAD_DIR || './data/uploads',
   jwtExpiresIn: '7d',

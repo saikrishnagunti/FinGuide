@@ -2,11 +2,27 @@ import initSqlJs from 'sql.js';
 import config from './config.js';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { dirname } from 'path';
+import { createClient } from '@libsql/client';
 
 // Ensure the data directory exists
 mkdirSync(dirname(config.databasePath), { recursive: true });
 
 let rawDb = null;
+let tursoClient = null;
+
+function getTursoClient() {
+  if (!tursoClient && config.tursoDatabaseUrl && config.tursoAuthToken) {
+    try {
+      tursoClient = createClient({
+        url: config.tursoDatabaseUrl,
+        authToken: config.tursoAuthToken,
+      });
+    } catch (e) {
+      console.warn('[Database] Failed to initialize Turso client:', e.message);
+    }
+  }
+  return tursoClient;
+}
 
 function normalizeParams(args) {
   if (args.length === 1 && Array.isArray(args[0])) {
@@ -146,6 +162,39 @@ export async function initializeDatabase() {
   rawDb.run('CREATE INDEX IF NOT EXISTS idx_security_logs_user ON security_logs(user_id);');
   rawDb.run('CREATE INDEX IF NOT EXISTS idx_security_logs_email ON security_logs(email);');
 
+  // Sync from Turso cloud if connected
+  const turso = getTursoClient();
+  if (turso) {
+    try {
+      console.log('🌐 Connecting to Turso cloud database...');
+      const tables = ['users', 'ie_snapshots', 'transactions', 'goals', 'otps', 'login_attempts', 'security_logs'];
+      let syncedCount = 0;
+
+      for (const table of tables) {
+        try {
+          const res = await turso.execute(`SELECT * FROM ${table}`);
+          if (res && res.rows && res.rows.length > 0) {
+            syncedCount += res.rows.length;
+            for (const row of res.rows) {
+              const keys = Object.keys(row);
+              const vals = Object.values(row);
+              const placeholders = keys.map(() => '?').join(', ');
+              rawDb.run(
+                `INSERT OR REPLACE INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`,
+                vals
+              );
+            }
+          }
+        } catch (tableErr) {
+          console.warn(`[TursoSync] Table ${table} sync note:`, tableErr.message);
+        }
+      }
+      console.log(`✅ Synchronized ${syncedCount} records from Turso cloud database!`);
+    } catch (tursoErr) {
+      console.warn('[TursoSync] Cloud sync error:', tursoErr.message);
+    }
+  }
+
   saveDatabase();
   console.log('✅ Database initialized successfully');
   return getDb();
@@ -213,6 +262,15 @@ export function getDb() {
           ? lastRow[0].values[0][0]
           : 0;
         saveDatabase();
+
+        // Asynchronously replicate write to Turso cloud
+        const turso = getTursoClient();
+        if (turso) {
+          turso.execute({ sql, args: flat }).catch(err => {
+            console.warn('[TursoSync] Cloud write replication error:', err.message);
+          });
+        }
+
         return { changes, lastInsertRowid };
       } catch (e) {
         console.error('DB run() error:', e.message, sql, flat);
@@ -223,6 +281,12 @@ export function getDb() {
     exec(sql) {
       rawDb.run(sql);
       saveDatabase();
+      const turso = getTursoClient();
+      if (turso) {
+        turso.executeMultiple(sql).catch(err => {
+          console.warn('[TursoSync] Cloud exec replication error:', err.message);
+        });
+      }
     },
 
     prepare(sql) {
