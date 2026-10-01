@@ -9,18 +9,31 @@ let transporter = null;
 function getTransporter() {
   if (transporter) return transporter;
 
-  if (config.smtp.host && config.smtp.user && config.smtp.pass) {
+  if (config.smtp.user && config.smtp.pass) {
     try {
-      transporter = nodemailer.createTransport({
-        host: config.smtp.host,
-        port: config.smtp.port,
-        secure: config.smtp.secure,
-        auth: {
-          user: config.smtp.user,
-          pass: config.smtp.pass,
-        },
-      });
-      console.log('📧 SMTP Email Transporter initialized for:', config.smtp.host);
+      const isGmail = (config.smtp.host && config.smtp.host.toLowerCase().includes('gmail')) ||
+                      (config.smtp.user && config.smtp.user.toLowerCase().includes('@gmail.com'));
+
+      const transportOptions = isGmail
+        ? {
+            service: 'gmail',
+            auth: {
+              user: config.smtp.user,
+              pass: config.smtp.pass,
+            },
+          }
+        : {
+            host: config.smtp.host || 'smtp.gmail.com',
+            port: config.smtp.port || 587,
+            secure: config.smtp.secure || config.smtp.port === 465,
+            auth: {
+              user: config.smtp.user,
+              pass: config.smtp.pass,
+            },
+          };
+
+      transporter = nodemailer.createTransport(transportOptions);
+      console.log('📧 SMTP Email Transporter initialized for:', isGmail ? 'Gmail Service' : config.smtp.host);
     } catch (err) {
       console.error('Failed to initialize SMTP transporter:', err.message);
       transporter = null;
@@ -124,7 +137,9 @@ async function sendMail({ to, subject, html, text, otpCode, purpose }) {
 
   try {
     const info = await mailTransporter.sendMail({
-      from: config.smtp.from,
+      from: (config.smtp.from && !config.smtp.from.includes('finguide.local'))
+        ? config.smtp.from
+        : (config.smtp.user ? `FinGuide Security <${config.smtp.user}>` : 'FinGuide Security <security@finguide.app>'),
       to,
       subject,
       text: text || `Your FinGuide verification code is: ${otpCode}. Valid for 10 minutes.`,
