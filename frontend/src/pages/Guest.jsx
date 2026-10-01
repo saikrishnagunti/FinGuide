@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { api } from '../utils/api';
+import BrandLogo from '../components/BrandLogo';
 import {
   Sparkles,
   Upload,
@@ -228,17 +229,10 @@ export default function Guest() {
       {/* ── Top Navigation Bar ── */}
       <header className="guest-header">
         <div className="guest-header-container">
-          <Link to="/" className="guest-brand" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div className="brand-icon-box" style={{ width: '32px', height: '32px' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
-              </svg>
-            </div>
-            <span className="brand-title">FinGuide</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <BrandLogo size="sm" />
             <span className="badge badge-primary">Guest Session</span>
-          </Link>
+          </div>
           <div className="guest-header-actions">
             <Link to="/login" className="btn btn-ghost btn-sm">Log In</Link>
             <Link to="/register" className="btn btn-primary btn-sm">
@@ -344,7 +338,7 @@ export default function Guest() {
                             <span className="input-prefix">₹</span>
                             <input
                               type="number"
-                              className="form-control"
+                              className="form-input form-control"
                               placeholder="0"
                               min="0"
                               value={incomeData[field]}
@@ -374,7 +368,7 @@ export default function Guest() {
                             <span className="input-prefix">₹</span>
                             <input
                               type="number"
-                              className="form-control"
+                              className="form-input form-control"
                               placeholder="0"
                               min="0"
                               value={expenseData[field]}

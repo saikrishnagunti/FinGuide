@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import PasswordStrengthMeter, { checkPasswordCriteria } from '../components/PasswordStrengthMeter';
+import BrandLogo from '../components/BrandLogo';
 import { Eye, EyeOff, ShieldAlert, KeyRound, CheckCircle2, ArrowLeft, Clock, Mail, AlertTriangle } from 'lucide-react';
 
 export default function Login() {
@@ -179,12 +180,28 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card" style={{ maxWidth: '440px' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-md)' }}>
-          <div className="brand-icon-box" style={{ width: '44px', height: '44px', borderRadius: '12px' }}>
-            <KeyRound size={22} />
+      {/* Top Header Bar with clickable FinGuide brand logo */}
+      <header className="auth-header-bar">
+        <BrandLogo size="sm" />
+        <Link
+          to="/"
+          className="btn btn-ghost btn-sm"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}
+        >
+          <ArrowLeft size={15} /> Back to Home
+        </Link>
+      </header>
+
+      {/* Centered card container with prominent BrandLogo button linking to / */}
+      <div className="auth-card-container">
+        <BrandLogo size="lg" className="auth-center-logo-btn" />
+
+        <div className="auth-card" style={{ maxWidth: '440px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-md)' }}>
+            <div className="brand-icon-box" style={{ width: '44px', height: '44px', borderRadius: '12px' }}>
+              <KeyRound size={22} />
+            </div>
           </div>
-        </div>
 
         {!isResetMode ? (
           <>
@@ -499,6 +516,7 @@ export default function Login() {
             )}
           </>
         )}
+      </div>
       </div>
     </div>
   );

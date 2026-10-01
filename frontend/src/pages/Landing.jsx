@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import BrandLogo from '../components/BrandLogo';
 import { BarChart3, Shield, Zap, TrendingUp, Sun, Moon } from 'lucide-react';
 
 export default function Landing() {
@@ -33,16 +34,7 @@ export default function Landing() {
   return (
     <div className="landing-page">
       <nav className="landing-nav">
-        <div className="landing-brand" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div className="brand-icon-box" style={{ width: '32px', height: '32px' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z" />
-              <path d="M2 17l10 5 10-5" />
-              <path d="M2 12l10 5 10-5" />
-            </svg>
-          </div>
-          <span style={{ fontWeight: 800, letterSpacing: '-0.02em', fontSize: '1.25rem' }}>FinGuide</span>
-        </div>
+        <BrandLogo size="sm" />
         <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
           {user ? (
             <Link to="/dashboard" className="btn btn-primary">
