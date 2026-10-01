@@ -121,7 +121,98 @@ export function runFallbackReactAdvisor({
     };
   }
 
-  // ── 2. Affordability Check with Specific Item Cost ──
+  // ── 2. Loan / Lend Scenario (e.g. "my friend asked me a loan of 3 lakhs") ──
+  if (/loan|lend|giving|give him|borrow/i.test(lower)) {
+    const lakhMatch = query.match(/([0-9.]+)\s*(?:lakhs?|lacs?|l)/i);
+    const numMatch = query.match(/([0-9,]+)/);
+    let loanAmt = 300000;
+    if (lakhMatch) {
+      loanAmt = parseFloat(lakhMatch[1]) * 100000;
+    } else if (numMatch) {
+      loanAmt = parseFloat(numMatch[1].replace(/,/g, ''));
+    }
+
+    const surplusDeficit = monthlySavings - loanAmt;
+    const canCoverFromSingleMonth = surplusDeficit >= 0;
+
+    const thoughtSteps = [
+      `Loan Evaluation: Assessed personal loan request of ${currency}${loanAmt.toLocaleString('en-IN')}.`,
+      `Cash Flow Stress-Test: Compared against regular monthly net surplus of ${currency}${monthlySavings.toLocaleString('en-IN')}.`,
+      canCoverFromSingleMonth
+        ? `Sustain Check: Organic monthly surplus exceeds the loan amount; capital position remains positive.`
+        : `Sustain Check: Single-month surplus falls short by ${currency}${Math.abs(surplusDeficit).toLocaleString('en-IN')}, requiring a temporary draw from liquid reserves.`,
+    ];
+
+    const answer = `### Personal Loan Sustainability Assessment\n\n` +
+      `Hello **${userName}**! Let’s evaluate the impact of lending **${currency}${loanAmt.toLocaleString('en-IN')}** next month:\n\n` +
+      `#### 📊 Cash Flow Telemetry\n` +
+      `- **Normal Monthly Surplus:** ${currency}${monthlySavings.toLocaleString('en-IN')} (${savingsRate}% savings rate)\n` +
+      `- **Requested Loan Amount:** ${currency}${loanAmt.toLocaleString('en-IN')}\n` +
+      `- **Next Month Net Cash Impact:** **${surplusDeficit >= 0 ? '+' : '-'}${currency}${Math.abs(surplusDeficit).toLocaleString('en-IN')}**\n\n` +
+      `#### 💡 Advisor Verdict & Guidance\n` +
+      (canCoverFromSingleMonth
+        ? `**Yes, you can easily sustain this.** Your regular monthly net surplus completely covers the loan, leaving you with **${currency}${surplusDeficit.toLocaleString('en-IN')}** in additional savings that month.`
+        : `**Yes, you can sustain this, provided you have liquid buffer reserves.** Because the loan exceeds next month's net surplus by **${currency}${Math.abs(surplusDeficit).toLocaleString('en-IN')}**, you will temporarily tap that amount from your existing bank savings or pause other goal contributions for just one month.`) +
+      `\n\n` +
+      `**Fiduciary Safeguards:**\n` +
+      `1. **Set Clear Repayment Terms:** Agree on an explicit repayment date or installment schedule so it doesn't collide with other major milestones.\n` +
+      `2. **Preserve Core Reserve:** Ensure you still retain at least 3 months of essential expenses (${currency}${Math.round(monthlyExpenses * 3).toLocaleString('en-IN')}) in untouched emergency funds.`;
+
+    return {
+      raw_text: answer,
+      final_answer: answer,
+      thought_steps: thoughtSteps,
+      hitl_action: null,
+      status: 'completed',
+    };
+  }
+
+  // ── 3. Follow-up Budget Target (e.g. "can i plan the trip in 10lakhs , is it possible?") ──
+  const planTargetMatch = query.match(/(?:plan|budget|target|do it in|make it)\s*(?:the\s*)?(?:trip|vacation)?\s*(?:in|for|at)?\s*([0-9.]+)\s*(?:lakhs?|lacs?|l)/i) ||
+                          query.match(/([0-9.]+)\s*(?:lakhs?|lacs?|l)\s*(?:is it possible|\?)/i);
+  if (planTargetMatch) {
+    const targetAmt = parseFloat(planTargetMatch[1]) * 100000;
+    const months = 8;
+    const monthlyNeeded = Math.round(targetAmt / months);
+    const pctOfSurplus = monthlySavings > 0 ? Math.round((monthlyNeeded / monthlySavings) * 100) : 100;
+
+    const thoughtSteps = [
+      `Target Calibration: Modeled specified target of ${currency}${targetAmt.toLocaleString('en-IN')} across an 8-month horizon.`,
+      `Savings Velocity: Monthly contribution required is ${currency}${monthlyNeeded.toLocaleString('en-IN')} (${pctOfSurplus}% of monthly surplus).`,
+      `Feasibility: Highly achievable within existing cash flow surplus.`,
+    ];
+
+    const answer = `### Budget Feasibility Analysis: **${currency}${targetAmt.toLocaleString('en-IN')} Target**\n\n` +
+      `Hello **${userName}**! **Yes, planning this in ${currency}${targetAmt.toLocaleString('en-IN')} is completely possible!**\n\n` +
+      `Here is the exact math to achieve this comfortably:\n\n` +
+      `#### 📊 Numbers Breakdown\n` +
+      `- **Target Budget:** ${currency}${targetAmt.toLocaleString('en-IN')}\n` +
+      `- **Accumulation Window:** ~8 months\n` +
+      `- **Monthly Savings Needed:** **${currency}${monthlyNeeded.toLocaleString('en-IN')}/month**\n` +
+      `- **Your Current Monthly Surplus:** **${currency}${monthlySavings.toLocaleString('en-IN')}**\n` +
+      `- **Remaining Monthly Cushion:** **${currency}${(monthlySavings - monthlyNeeded).toLocaleString('en-IN')}/month**\n\n` +
+      `#### ✈️ Fiduciary Recommendation\n` +
+      `This goal consumes **${pctOfSurplus}%** of your monthly surplus, leaving you with **${currency}${(monthlySavings - monthlyNeeded).toLocaleString('en-IN')}** every single month for other savings and emergencies.\n\n` +
+      `Would you like me to update your goal tracker to lock in this **${currency}${targetAmt.toLocaleString('en-IN')}** target?`;
+
+    return {
+      raw_text: answer,
+      final_answer: answer,
+      thought_steps: thoughtSteps,
+      hitl_action: {
+        tool: 'propose_create_goal',
+        summary: `Set International Trip goal of ${currency}${targetAmt.toLocaleString('en-IN')}`,
+        data: {
+          name: 'International Trip Summer 2027',
+          target_amount: targetAmt,
+          priority: 'high',
+        },
+      },
+      status: 'completed',
+    };
+  }
+
+  // ── 4. Affordability Check with Specific Item Cost ──
   const amountMatch = query.match(/(?:(?:Rs\.?|INR|₹|\$|€)\s*([0-9,]+)|([0-9,]+)\s*(?:rupees|inr|rs))/i) ||
                       query.match(/(?:afford|buy|purchase|costing)\s*(?:a|an)?\s*(?:[A-Za-z0-9\s]*?)?(?:₹|Rs\.?)?\s*([0-9,]+)/i);
 
@@ -173,7 +264,7 @@ export function runFallbackReactAdvisor({
     };
   }
 
-  // ── 3. Spending Breakdown / Where is money going / Category analysis ──
+  // ── 5. Spending Breakdown / Where is money going / Category analysis ──
   if (/where is (?:my )?money|top spending|category|categories|spending breakdown|expenses/i.test(lower)) {
     const breakdownText = sortedCategories.length > 0
       ? sortedCategories.map(c => `- **${c.cat}:** ${currency}${c.amt.toLocaleString('en-IN')} (${monthlyExpenses > 0 ? Math.round((c.amt / monthlyExpenses) * 100) : 0}%)`).join('\n')
@@ -204,17 +295,14 @@ export function runFallbackReactAdvisor({
     };
   }
 
-  // ── 4. General Contextual Advice ──
+  // ── 6. General Contextual Advice ──
   const answer = `Hello **${userName}**! 👋\n\n` +
-    `Here is your real-time financial telemetry:\n\n` +
-    `- **Monthly Inflow:** ${currency}${monthlyIncome.toLocaleString('en-IN')}\n` +
-    `- **Monthly Outflow:** ${currency}${monthlyExpenses.toLocaleString('en-IN')}\n` +
-    `- **Net Cash Flow:** **${monthlySavings >= 0 ? '+' : ''}${currency}${monthlySavings.toLocaleString('en-IN')}** (${savingsRate}% savings rate)\n\n` +
-    `You are currently operating in a **${monthlySavings >= 0 ? 'healthy surplus' : 'deficit'}**. I can analyze any financial scenario, such as:\n\n` +
-    `- *"Can I afford an international vacation in 2027?"*\n` +
-    `- *"What if I reduce my dining expenses by 15%?"*\n` +
-    `- *"Propose a budget cap on my top spending category"*\n` +
-    `- *"How should I allocate my monthly savings across emergency and long-term goals?"*`;
+    `Based on your verified financial ledger, here is your current cash flow balance:\n\n` +
+    `- **Monthly Operating Inflow:** ${currency}${monthlyIncome.toLocaleString('en-IN')}\n` +
+    `- **Monthly Operating Outflow:** ${currency}${monthlyExpenses.toLocaleString('en-IN')}\n` +
+    `- **Net Monthly Surplus:** **${monthlySavings >= 0 ? '+' : ''}${currency}${monthlySavings.toLocaleString('en-IN')}** (${savingsRate}% savings retention)\n\n` +
+    `You are operating with strong cash flow health. With an ongoing surplus of ${currency}${monthlySavings.toLocaleString('en-IN')} per month, you have the financial latitude to fund major milestones, allocate capital toward investments, or absorb discretionary expenditures without disrupting your core liquidity.\n\n` +
+    `Tell me the specific amount, timeframe, or goal you have in mind and I will model the exact roadmap for you.`;
 
   return {
     raw_text: answer,

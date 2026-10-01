@@ -67,9 +67,9 @@ export default function Advisor() {
     setLoading(true);
 
     try {
-      const history = newMessages
+      const history = messages
         .filter(m => m.role !== 'system')
-        .slice(-10)
+        .slice(-12)
         .map(m => ({ role: m.role, content: m.content }));
 
       let responseData;
@@ -83,7 +83,7 @@ export default function Advisor() {
         ...prev,
         {
           role: 'assistant',
-          content: responseData.raw_text || 'No response generated.',
+          content: responseData.raw_text || responseData.reply || responseData.response || 'No response generated.',
           thoughtSteps: responseData.thought_steps || [],
           hitlAction: responseData.hitl_action || null,
         },

@@ -116,24 +116,57 @@ ${goalsText}
 - Recent Account Activity:
 ${recentTxnsText || '- None recorded'}`;
 
-  // 3. Assemble Conversation History
-  const historyContents = [];
+  // 3. Assemble Conversation History and Clean Alternating Turns
+  const cleanTurns = [];
+  const currentMsg = (message || '').trim();
+
   if (Array.isArray(conversation_history) && conversation_history.length > 0) {
-    for (const msg of conversation_history.slice(-8)) {
-      if (msg.role === 'user' || msg.role === 'assistant') {
-        historyContents.push({
-          role: msg.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: msg.content || '' }],
+    for (const msg of conversation_history.slice(-12)) {
+      if (!msg || !msg.content || typeof msg.content !== 'string') continue;
+      const text = msg.content.trim();
+      if (!text) continue;
+
+      // Filter out initial generic welcome greeting if assistant
+      if (msg.role === 'assistant' && (text.startsWith('Hi ') || text.startsWith('Hello ')) && text.includes('FinGuide AI')) {
+        continue;
+      }
+
+      const role = msg.role === 'assistant' ? 'model' : 'user';
+
+      // Avoid consecutive turns with the same role: merge text
+      if (cleanTurns.length > 0 && cleanTurns[cleanTurns.length - 1].role === role) {
+        cleanTurns[cleanTurns.length - 1].parts[0].text += `\n\n${text}`;
+      } else {
+        cleanTurns.push({
+          role,
+          parts: [{ text }],
         });
       }
     }
   }
 
-  const promptText = `${systemInstruction}\n\nUser Question: "${message}"`;
-  const contents = [
-    ...historyContents,
-    { role: 'user', parts: [{ text: promptText }] },
-  ];
+  // Ensure conversation history begins with a user turn
+  while (cleanTurns.length > 0 && cleanTurns[0].role === 'model') {
+    cleanTurns.shift();
+  }
+
+  // If client passed the current message at the end of conversation_history,
+  // do not duplicate it. Otherwise append the current message.
+  if (cleanTurns.length > 0 && cleanTurns[cleanTurns.length - 1].role === 'user') {
+    const lastText = cleanTurns[cleanTurns.length - 1].parts[0].text;
+    if (lastText !== currentMsg && currentMsg) {
+      cleanTurns[cleanTurns.length - 1].parts[0].text += `\n\n${currentMsg}`;
+    }
+  } else if (currentMsg) {
+    cleanTurns.push({
+      role: 'user',
+      parts: [{ text: currentMsg }],
+    });
+  }
+
+  if (cleanTurns.length === 0 && currentMsg) {
+    cleanTurns.push({ role: 'user', parts: [{ text: currentMsg }] });
+  }
 
   // 4. Query Gemini API with Fallback Models
   const candidateModels = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-flash-latest'];
@@ -143,11 +176,35 @@ ${recentTxnsText || '- None recorded'}`;
   for (const model of candidateModels) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      const res = await fetch(url, {
+
+      // Primary approach: Native system_instruction
+      let res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents }),
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: cleanTurns,
+        }),
       });
+
+      // Fallback approach if system_instruction is rejected
+      if (!res.ok && res.status === 400) {
+        const fallbackTurns = cleanTurns.map((turn, i) => {
+          if (i === 0 && turn.role === 'user') {
+            return {
+              role: 'user',
+              parts: [{ text: `${systemInstruction}\n\nUser Question: ${turn.parts[0].text}` }],
+            };
+          }
+          return turn;
+        });
+
+        res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: fallbackTurns }),
+        });
+      }
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
