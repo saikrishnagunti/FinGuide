@@ -2,6 +2,8 @@ import { Router } from 'express';
 import db from '../database.js';
 import { agentClient } from '../services/agent-client.js';
 import { generateFallbackAudit } from '../services/audit-fallback.js';
+import { runFallbackReactAdvisor } from '../services/react-fallback.js';
+import { computeStatisticalForecast } from '../services/forecast-fallback.js';
 
 const router = Router();
 
@@ -181,21 +183,33 @@ router.post('/react', async (req, res) => {
       expense_data: JSON.parse(s.expense_data),
     }));
 
-    const result = await agentClient.reactChat({
-      user_context: { name: user.name, currency: user.currency || '₹', is_logged_in: true },
-      message,
-      conversation_history: conversation_history || [],
-      financial_data: {
+    try {
+      const result = await agentClient.reactChat({
+        user_context: { name: user.name, currency: user.currency || '₹', is_logged_in: true },
+        message,
+        conversation_history: conversation_history || [],
+        financial_data: {
+          snapshots: parsedSnapshots,
+          transactions,
+          goals,
+        },
+      });
+
+      return res.json(result);
+    } catch (agentErr) {
+      console.warn('[AgentRoute] Python AI ReAct service unreachable:', agentErr.message, '— executing resilient ReAct engine.');
+      const fallbackResult = runFallbackReactAdvisor({
+        message,
+        user,
         snapshots: parsedSnapshots,
         transactions,
         goals,
-      },
-    });
-
-    res.json(result);
+      });
+      return res.json(fallbackResult);
+    }
   } catch (err) {
-    console.error('Agent ReAct error:', err);
-    res.status(502).json({ error: err.message || 'ReAct agent execution failed' });
+    console.error('Agent ReAct fatal error:', err);
+    res.status(500).json({ error: err.message || 'ReAct advisor failed' });
   }
 });
 
@@ -388,16 +402,22 @@ async function handleTimeSeriesForecast(req, res) {
       history = userId ? getUserMonthlyHistory(userId) : [];
     }
 
-    const result = await agentClient.getTimeSeriesForecast({
-      history,
-      months_ahead: monthsAhead,
-      model_type: modelType,
-    });
+    try {
+      const result = await agentClient.getTimeSeriesForecast({
+        history,
+        months_ahead: monthsAhead,
+        model_type: modelType,
+      });
 
-    res.json(result);
+      return res.json(result);
+    } catch (agentErr) {
+      console.warn('[AgentRoute] Python time series microservice unavailable:', agentErr.message, '— generating resilient statistical forecast.');
+      const fallbackResult = computeStatisticalForecast(history, monthsAhead, modelType);
+      return res.json(fallbackResult);
+    }
   } catch (err) {
-    console.error('Time series forecast error:', err);
-    res.status(502).json({ error: err.message || 'Time series forecast failed' });
+    console.error('Time series forecast fatal error:', err);
+    res.status(500).json({ error: err.message || 'Time series forecast failed' });
   }
 }
 

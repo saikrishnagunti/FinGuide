@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -186,7 +186,7 @@ export default function Dashboard() {
   const [forecastLoading, setForecastLoading] = useState(false);
   const { isDark } = useTheme();
   const [chartView, setChartView] = useState('area'); // 'area' | 'bar' | 'net'
-  const [timeRange, setTimeRange] = useState('all'); // 'all' | '6m' | '12m'
+  const [timeRange, setTimeRange] = useState('1m'); // '1m' | '6m' | '12m' | 'all'
   const [hoveredCategory, setHoveredCategory] = useState(null);
 
   const donutColors = isDark ? DONUT_COLORS_DARK : DONUT_COLORS_LIGHT;
@@ -235,15 +235,57 @@ export default function Dashboard() {
     }
   }
 
-  // Compute stats from latest snapshot OR transactions
-  const latest = snapshots[0];
-  const txnIncome = summary?.totals?.find(t => t.type === 'income')?.total || 0;
-  const txnExpenses = summary?.totals?.find(t => t.type === 'expense')?.total || 0;
+  // Dynamic calculation for Stat Cards based on selected timeframe
+  const periodStats = useMemo(() => {
+    if (!snapshots || snapshots.length === 0) {
+      const inc = summary?.totals?.find(t => t.type === 'income')?.total || 0;
+      const exp = summary?.totals?.find(t => t.type === 'expense')?.total || 0;
+      const net = inc - exp;
+      return {
+        income: inc,
+        expenses: exp,
+        net,
+        rate: inc > 0 ? ((net / inc) * 100).toFixed(1) : 0,
+        subtitle: 'Aggregated Records',
+      };
+    }
 
-  const totalIncome = latest ? latest.total_income : txnIncome;
-  const totalExpenses = latest ? latest.total_expenses : txnExpenses;
-  const netSavings = totalIncome - totalExpenses;
-  const savingsRate = totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : 0;
+    if (timeRange === '1m') {
+      const latest = snapshots[0];
+      const inc = Number(latest.total_income) || 0;
+      const exp = Number(latest.total_expenses) || 0;
+      const net = Number(latest.net_savings) || (inc - exp);
+      return {
+        income: inc,
+        expenses: exp,
+        net,
+        rate: inc > 0 ? ((net / inc) * 100).toFixed(1) : 0,
+        subtitle: 'Current Month',
+      };
+    }
+
+    const limit = timeRange === '6m' ? 6 : timeRange === '12m' ? 12 : snapshots.length;
+    const slice = snapshots.slice(0, limit);
+    const inc = slice.reduce((sum, s) => sum + (Number(s.total_income) || 0), 0);
+    const exp = slice.reduce((sum, s) => sum + (Number(s.total_expenses) || 0), 0);
+    const net = inc - exp;
+    const rate = inc > 0 ? ((net / inc) * 100).toFixed(1) : 0;
+    const label = timeRange === '6m' ? 'Last 6 Months' : timeRange === '12m' ? 'Last 12 Months' : 'All-Time Historical';
+
+    return {
+      income: inc,
+      expenses: exp,
+      net,
+      rate,
+      subtitle: `${label} (${slice.length} Mos)`,
+    };
+  }, [snapshots, summary, timeRange]);
+
+  const latest = snapshots[0];
+  const totalIncome = periodStats.income;
+  const totalExpenses = periodStats.expenses;
+  const netSavings = periodStats.net;
+  const savingsRate = periodStats.rate;
 
   // Build clean chronological history list
   let historyList = [];
@@ -311,7 +353,11 @@ export default function Dashboard() {
 
   // Filter historical points by timeRange if requested
   let displayChartData = lineChartData;
-  if (timeRange === '6m') {
+  if (timeRange === '1m') {
+    const histOnly = lineChartData.filter(d => !d.isForecast);
+    const forecastOnly = lineChartData.filter(d => d.isForecast);
+    displayChartData = [...histOnly.slice(-1), ...forecastOnly];
+  } else if (timeRange === '6m') {
     const histOnly = lineChartData.filter(d => !d.isForecast);
     const forecastOnly = lineChartData.filter(d => d.isForecast);
     displayChartData = [...histOnly.slice(-6), ...forecastOnly];
@@ -369,7 +415,7 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      <div className="dashboard-hero-header animate-materialize">
+      <div className="dashboard-hero-header animate-materialize" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
         <div>
           <div className="dashboard-date-badge">
             <Calendar size={13} />
@@ -381,6 +427,88 @@ export default function Dashboard() {
           <p className="dashboard-welcome-desc">
             Your real-time wealth telemetry, cash flow trajectories, and statistical forecast models.
           </p>
+        </div>
+
+        {/* Audit-Style Timeframe Selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap', marginTop: 'var(--space-xs)' }}>
+          <div
+            className="period-picker-wrapper"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'var(--surface-hover)',
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-full)',
+              border: '1px solid var(--border-color)',
+            }}
+          >
+            <Calendar size={14} color="var(--primary)" />
+            <select
+              className="period-select"
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-primary)',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+              title="Select Dashboard Timeframe"
+            >
+              <option value="1m">1 Month (Current)</option>
+              <option value="6m">Last 6 Months</option>
+              <option value="12m">Last 12 Months</option>
+              <option value="all">All-Time Historical</option>
+            </select>
+          </div>
+
+          <div
+            className="chart-pill-group"
+            style={{
+              display: 'inline-flex',
+              background: 'var(--surface-hover)',
+              padding: '3px',
+              borderRadius: 'var(--radius-full)',
+              border: '1px solid var(--border-color)',
+            }}
+          >
+            <button
+              type="button"
+              className={`chart-pill-btn ${timeRange === '1m' ? 'active' : ''}`}
+              onClick={() => setTimeRange('1m')}
+              style={{ fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-full)' }}
+            >
+              1M
+            </button>
+            <button
+              type="button"
+              className={`chart-pill-btn ${timeRange === '6m' ? 'active' : ''}`}
+              onClick={() => setTimeRange('6m')}
+              style={{ fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-full)' }}
+            >
+              6M
+            </button>
+            <button
+              type="button"
+              className={`chart-pill-btn ${timeRange === '12m' ? 'active' : ''}`}
+              onClick={() => setTimeRange('12m')}
+              style={{ fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-full)' }}
+            >
+              12M
+            </button>
+            <button
+              type="button"
+              className={`chart-pill-btn ${timeRange === 'all' ? 'active' : ''}`}
+              onClick={() => setTimeRange('all')}
+              style={{ fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-full)' }}
+            >
+              All
+            </button>
+          </div>
         </div>
       </div>
 
@@ -394,7 +522,7 @@ export default function Dashboard() {
           <div className="card-value tabular-nums">{currency}{totalIncome.toLocaleString()}</div>
           <div className="card-subtitle">
             <span className="trend-badge positive">Inflow</span>
-            <span>{latest ? 'Current Month' : 'Aggregated Records'}</span>
+            <span>{periodStats.subtitle}</span>
           </div>
         </div>
 
@@ -406,7 +534,7 @@ export default function Dashboard() {
           <div className="card-value tabular-nums">{currency}{totalExpenses.toLocaleString()}</div>
           <div className="card-subtitle">
             <span className="trend-badge negative">Outflow</span>
-            <span>{latest ? 'Current Month' : 'Aggregated Records'}</span>
+            <span>{periodStats.subtitle}</span>
           </div>
         </div>
 
@@ -427,7 +555,7 @@ export default function Dashboard() {
             <span className={`trend-badge ${netSavings >= 0 ? (isDark ? 'gold' : 'positive') : 'negative'}`}>
               {netSavings >= 0 ? 'Surplus' : 'Deficit'}
             </span>
-            <span>Net Monthly Balance</span>
+            <span>{periodStats.subtitle}</span>
           </div>
         </div>
 
@@ -610,10 +738,10 @@ export default function Dashboard() {
               <div className="chart-pill-group">
                 <button
                   type="button"
-                  className={`chart-pill-btn ${timeRange === 'all' ? 'active' : ''}`}
-                  onClick={() => setTimeRange('all')}
+                  className={`chart-pill-btn ${timeRange === '1m' ? 'active' : ''}`}
+                  onClick={() => setTimeRange('1m')}
                 >
-                  All
+                  1M
                 </button>
                 <button
                   type="button"
@@ -628,6 +756,13 @@ export default function Dashboard() {
                   onClick={() => setTimeRange('12m')}
                 >
                   12M
+                </button>
+                <button
+                  type="button"
+                  className={`chart-pill-btn ${timeRange === 'all' ? 'active' : ''}`}
+                  onClick={() => setTimeRange('all')}
+                >
+                  All
                 </button>
               </div>
             </div>
