@@ -34,7 +34,20 @@ export default function Analysis() {
   const { user } = useAuth();
   const { openAdvisor } = useAdvisor();
 
-  const [period, setPeriod] = useState('current');
+  const [period, setPeriod] = useState(() => {
+    try {
+      return localStorage.getItem('finguide_audit_period') || 'all';
+    } catch {
+      return 'all';
+    }
+  });
+
+  const handlePeriodChange = (val) => {
+    setPeriod(val);
+    try {
+      localStorage.setItem('finguide_audit_period', val);
+    } catch {}
+  };
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -123,7 +136,7 @@ export default function Analysis() {
             <select
               className="period-select"
               value={period}
-              onChange={(e) => setPeriod(e.target.value)}
+              onChange={(e) => handlePeriodChange(e.target.value)}
               disabled={loading}
               title="Select Audit Period"
             >

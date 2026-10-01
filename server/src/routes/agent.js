@@ -22,7 +22,7 @@ router.post('/analyze', async (req, res) => {
     // Gather user data from DB
     const user = db.prepare('SELECT id, name, currency FROM users WHERE id = ?').get(userId);
     const snapshots = db.prepare(
-      'SELECT * FROM ie_snapshots WHERE user_id = ? ORDER BY year DESC, month DESC LIMIT 12'
+      'SELECT * FROM ie_snapshots WHERE user_id = ? ORDER BY year DESC, month DESC LIMIT 120'
     ).all(userId);
     const transactions = db.prepare(
       'SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC LIMIT 500'
@@ -54,7 +54,7 @@ router.post('/analyze', async (req, res) => {
         snapshots: parsedSnapshots,
         transactions,
         goals,
-        period: period || 'current',
+        period: period || 'all',
         query: query || 'Provide a comprehensive financial analysis',
       });
 
@@ -66,7 +66,7 @@ router.post('/analyze', async (req, res) => {
         snapshots: parsedSnapshots,
         transactions,
         goals,
-        period: period || 'current',
+        period: period || 'all',
         query: query || '',
       });
       return res.json(fallbackResult);

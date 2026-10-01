@@ -186,7 +186,11 @@ export default function Dashboard() {
   const [forecastLoading, setForecastLoading] = useState(false);
   const { isDark } = useTheme();
   const [timeRange, setTimeRange] = useState(() => {
-    return localStorage.getItem('finguide_time_range') || 'all';
+    try {
+      return localStorage.getItem('finguide_time_range') || 'all';
+    } catch {
+      return 'all';
+    }
   });
 
   const handleTimeRangeChange = (newRange) => {
@@ -250,16 +254,16 @@ export default function Dashboard() {
       const exp = summary?.totals?.find(t => t.type === 'expense')?.total || 0;
       const net = inc - exp;
       return {
-        income: inc,
-        expenses: exp,
-        net,
+        income: Number(inc) || 0,
+        expenses: Number(exp) || 0,
+        net: Number(net) || 0,
         rate: inc > 0 ? ((net / inc) * 100).toFixed(1) : 0,
-        subtitle: 'Aggregated Records',
+        subtitle: 'All-Time Records',
       };
     }
 
     if (timeRange === '1m') {
-      const latest = snapshots[0];
+      const latest = snapshots[0] || {};
       const inc = Number(latest.total_income) || 0;
       const exp = Number(latest.total_expenses) || 0;
       const net = Number(latest.net_savings) || (inc - exp);
@@ -289,11 +293,11 @@ export default function Dashboard() {
     };
   }, [snapshots, summary, timeRange]);
 
-  const latest = snapshots[0];
-  const totalIncome = periodStats.income;
-  const totalExpenses = periodStats.expenses;
-  const netSavings = periodStats.net;
-  const savingsRate = periodStats.rate;
+  const latest = snapshots[0] || {};
+  const totalIncome = Number(periodStats?.income) || 0;
+  const totalExpenses = Number(periodStats?.expenses) || 0;
+  const netSavings = Number(periodStats?.net) || 0;
+  const savingsRate = Number(periodStats?.rate) || 0;
 
   // Build clean chronological history list
   let historyList = [];
@@ -377,12 +381,12 @@ export default function Dashboard() {
 
   // Summary averages for the KPI strip above chart
   const histPoints = lineChartData.filter(d => !d.isForecast);
-  const avgIncome = histPoints.length > 0
+  const avgIncome = Number(histPoints.length > 0
     ? Math.round(histPoints.reduce((acc, p) => acc + (p.Income || 0), 0) / histPoints.length)
-    : Math.round(totalIncome);
-  const avgExpense = histPoints.length > 0
+    : Math.round(totalIncome)) || 0;
+  const avgExpense = Number(histPoints.length > 0
     ? Math.round(histPoints.reduce((acc, p) => acc + (p.Expenses || 0), 0) / histPoints.length)
-    : Math.round(totalExpenses);
+    : Math.round(totalExpenses)) || 0;
   const avgNet = avgIncome - avgExpense;
   const avgSavingsRate = avgIncome > 0 ? Math.round((avgNet / avgIncome) * 100) : 0;
 
@@ -804,7 +808,7 @@ export default function Dashboard() {
             </div>
 
             {/* Model Evaluation Metric Comparison Bar (ARIMA vs SARIMA vs ETS) */}
-            {isEligibleForForecast && timeSeriesForecast?.evaluations?.income && (
+            {isEligibleForForecast && Array.isArray(timeSeriesForecast?.evaluations?.income) && timeSeriesForecast.evaluations.income.length > 0 && (
               <div
                 style={{
                   display: 'flex',
@@ -1085,7 +1089,7 @@ export default function Dashboard() {
             >
               <Info size={13} style={{ flexShrink: 0, marginTop: '2px', color: 'var(--accent-primary)' }} />
               <span>
-                <strong>Disclaimer:</strong> {(timeSeriesForecast?.disclaimer || "Forecasts are generated using historical cash-flow trends for informational budgeting guidance only, not financial advice. Projections require at least 12 months of data, and actual outcomes may differ.").replace(/^Disclaimer:\s*/i, '')}
+                <strong>Disclaimer:</strong> {String(timeSeriesForecast?.disclaimer || "Forecasts are generated using historical cash-flow trends for informational budgeting guidance only, not financial advice. Projections require at least 12 months of data, and actual outcomes may differ.").replace(/^Disclaimer:\s*/i, '')}
               </span>
             </div>
           </div>
@@ -1169,7 +1173,7 @@ export default function Dashboard() {
                         lineHeight: 1.2,
                       }}
                     >
-                      {currency}{(hoveredCategory ? hoveredCategory.value : totalExpensesSum).toLocaleString('en-IN')}
+                      {currency}{Number(hoveredCategory ? hoveredCategory.value : totalExpensesSum || 0).toLocaleString('en-IN')}
                     </span>
                     {hoveredCategory && totalExpensesSum > 0 ? (
                       <span
@@ -1221,7 +1225,7 @@ export default function Dashboard() {
                             <span>{cat.name}</span>
                           </span>
                           <span className="spending-matrix-amount">
-                            {currency}{cat.value.toLocaleString('en-IN')} <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>({pct}%)</span>
+                            {currency}{Number(cat?.value || 0).toLocaleString('en-IN')} <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>({pct}%)</span>
                           </span>
                         </div>
                         <div className="spending-matrix-track">
