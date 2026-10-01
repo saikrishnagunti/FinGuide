@@ -154,7 +154,47 @@ async function sendViaResend({ to, subject, html, text }) {
 }
 
 /**
- * Send an email via Resend API, SMTP, or fallback to instant code on screen.
+ * Send an email via Brevo HTTPS API (Port 443 - Can deliver to ANY recipient worldwide without domain).
+ */
+async function sendViaBrevo({ to, subject, html, text }) {
+  if (!config.brevoApiKey) return null;
+
+  try {
+    const senderEmail = config.smtp.user || 'gsk74s@gmail.com';
+    const senderName = 'FinGuide Security';
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': config.brevoApiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        textContent: text,
+      }),
+    });
+
+    const data = await response.json();
+    if (response.ok && data.messageId) {
+      console.log(`✅ Security email delivered via Brevo API to ${to}. MessageId: ${data.messageId}`);
+      return { success: true, delivered: true, messageId: data.messageId };
+    }
+
+    console.warn(`⚠️ Brevo API notice for ${to}:`, data.message || data.code);
+    return { success: false, delivered: false, error: data.message || 'Brevo delivery rejected' };
+  } catch (err) {
+    console.warn('⚠️ Failed to dispatch email via Brevo API:', err.message);
+    return { success: false, delivered: false, error: err.message };
+  }
+}
+
+/**
+ * Send an email via Brevo API, Resend API, SMTP, or fallback to instant code on screen.
  */
 async function sendMail({ to, subject, html, text, otpCode, purpose }) {
   // Print high-visibility dev banner in server terminal for local development & debugging
@@ -169,7 +209,15 @@ async function sendMail({ to, subject, html, text, otpCode, purpose }) {
   ╚════════════════════════════════════════════════════════════════════╝
   `);
 
-  // 1. Try Resend HTTPS API first (ultra-fast, immune to cloud SMTP port blocks)
+  // 1. Try Brevo HTTPS API first (sends to ANY recipient worldwide via standard port 443)
+  if (config.brevoApiKey) {
+    const brevoResult = await sendViaBrevo({ to, subject, html, text });
+    if (brevoResult && brevoResult.delivered) {
+      return brevoResult;
+    }
+  }
+
+  // 2. Try Resend HTTPS API (ultra-fast for verified accounts)
   if (config.resendApiKey) {
     const resendResult = await sendViaResend({ to, subject, html, text });
     if (resendResult && resendResult.delivered) {

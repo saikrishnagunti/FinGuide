@@ -10,6 +10,7 @@ const config = {
   jwtExpiresIn: '7d',
   corsOrigin: process.env.CORS_ORIGIN || '',
   resendApiKey: process.env.RESEND_API_KEY || '',
+  brevoApiKey: process.env.BREVO_API_KEY || '',
 
   // Email / SMTP Settings
   smtp: {
