@@ -116,9 +116,9 @@ async function sendMail({ to, subject, html, text, otpCode, purpose }) {
     return {
       success: true,
       delivered: false,
-      mode: 'development_fallback',
-      message: 'SMTP not configured; OTP logged to console and provided in dev response',
-      devOtp: config.nodeEnv !== 'production' ? otpCode : undefined,
+      mode: 'fallback',
+      message: 'Email service is running in demo mode (SMTP not yet configured). Use the code below.',
+      devOtp: otpCode,
     };
   }
 

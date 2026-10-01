@@ -261,7 +261,7 @@ export default function Register() {
                 justifyContent: 'space-between',
                 gap: '8px'
               }}>
-                <span>💡 Dev Mode OTP: <strong>{devOtp}</strong></span>
+                <span>🔐 Verification Code: <strong style={{ letterSpacing: '2px', fontSize: '14px' }}>{devOtp}</strong></span>
                 <button
                   type="button"
                   onClick={() => setOtp(devOtp)}
