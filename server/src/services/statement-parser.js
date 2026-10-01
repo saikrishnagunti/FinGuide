@@ -301,6 +301,11 @@ export function detectBankName(allText) {
  * Supports both single-line and multi-line/table-cell statement layouts.
  * Works offline, in memory, and without requiring any external Python service.
  */
+/**
+ * Direct native PDF bank statement text parser (pure Node.js / pdf-parse).
+ * Supports both single-line and multi-line/table-cell statement layouts.
+ * Works offline, in memory, and without requiring any external Python service.
+ */
 export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
   const fileBuffer = readFileSync(filePath);
   const parser = new PDFParse({ data: fileBuffer });
@@ -342,31 +347,80 @@ export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
     periodEnd = normalizeDate(periodMatch[2]);
   }
 
-  // 4. Parse transaction blocks (handles single-line and multi-line statements like ICICI)
+  // 4. Detect initial opening balance from document header if present
+  let initialOpeningBalance = null;
+  const opMatch = allText.match(/(?:opening\s*balance)\s*[:.-]?\s*(?:Rs\.?|INR|₹)?\s*([0-9,]+\.[0-9]{2})/i);
+  if (opMatch) {
+    initialOpeningBalance = parseFloat(opMatch[1].replace(/,/g, ''));
+  }
+
+  // 5. Parse transaction blocks strictly within table boundaries
   const lines = allText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   const blocks = [];
   let currentBlock = null;
+  let tableStarted = false;
+
+  const STRICT_DATE_START = /^(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2}|\d{1,2}[\s\-][A-Za-z]{3}[\s\-]\d{2,4})/;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lowerLine = line.toLowerCase();
 
-    // Skip table headers and non-transaction footers
+    // Check if table header is encountered (supports single and multi-page statements)
+    if (
+      (lowerLine.includes('date') && (lowerLine.includes('narration') || lowerLine.includes('particulars') || lowerLine.includes('description'))) ||
+      (lowerLine.includes('date') && (lowerLine.includes('debit') || lowerLine.includes('credit') || lowerLine.includes('withdrawal')))
+    ) {
+      tableStarted = true;
+      if (currentBlock) {
+        blocks.push(currentBlock);
+        currentBlock = null;
+      }
+      continue;
+    }
+
+    // Stop table processing upon reaching disclosures or statement summary end
+    if (
+      lowerLine.includes('corporate & current account disclosures') ||
+      lowerLine.includes('total debits count') ||
+      lowerLine.includes('closing available balance') ||
+      lowerLine.includes('1. verification:') ||
+      lowerLine.includes('end of statement') ||
+      lowerLine.includes('important messages for you') ||
+      lowerLine.includes('abbreviations')
+    ) {
+      if (currentBlock) {
+        blocks.push(currentBlock);
+        currentBlock = null;
+      }
+      tableStarted = false;
+      continue;
+    }
+
+    // Never parse lines before the transaction table starts
+    if (!tableStarted) {
+      continue;
+    }
+
+    // Skip standalone opening balance lines inside table
+    if (lowerLine.includes('opening balance')) {
+      const matchAmt = line.match(/([0-9,]+\.[0-9]{2})/);
+      if (matchAmt) {
+        initialOpeningBalance = parseFloat(matchAmt[1].replace(/,/g, ''));
+      }
+      continue;
+    }
+
+    // Skip pagination, continued markers, inter-page headers
     if (
       lowerLine.startsWith('page ') ||
-      lowerLine.includes('opening balance') ||
-      lowerLine.includes('closing balance') ||
-      lowerLine.includes('closing available balance') ||
-      lowerLine.includes('total debits') ||
-      lowerLine.includes('total credits') ||
       lowerLine.includes('statement continued') ||
-      lowerLine.includes('corporate & current account disclosures') ||
-      lowerLine.includes('important messages for you') ||
-      lowerLine.includes('customer care') ||
-      lowerLine.includes('cyber crime helpline') ||
-      lowerLine.includes('narration / transaction details') ||
-      lowerLine.includes('narration / description') ||
-      lowerLine.includes('withdrawal (dr)') ||
+      lowerLine.includes('registered office:') ||
+      lowerLine.includes('current account statement - transactions') ||
+      lowerLine.startsWith('-- ') ||
+      /^--\s*\d+\s*of\s*\d+\s*--$/i.test(line) ||
+      /^a\/c:\s*[0-9Xx*\-]+\s*\|/i.test(line) ||
+      /^account no:\s*[0-9Xx*\-]+\s*\|/i.test(line) ||
       lowerLine.startsWith('chq / ref no.') ||
       lowerLine.startsWith('chq.no.') ||
       lowerLine.startsWith('relationship type') ||
@@ -375,8 +429,8 @@ export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
       continue;
     }
 
-    const dateMatch = line.match(DATE_REGEX);
-    if (dateMatch && (line.indexOf(dateMatch[1]) < 6 || !currentBlock)) {
+    const dateMatch = line.match(STRICT_DATE_START);
+    if (dateMatch) {
       if (currentBlock) {
         blocks.push(currentBlock);
       }
@@ -394,7 +448,7 @@ export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
   }
 
   const transactions = [];
-  let prevBalance = null;
+  let prevBalance = initialOpeningBalance;
 
   for (const block of blocks) {
     const fullBlockText = block.lines.join(' ');
@@ -404,10 +458,10 @@ export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
     let type = 'expense';
     let balance = null;
 
-    // Pattern 1: Credit in table column: "- 3,85,000.00 8,03,650.00"
-    const crColMatch = lastLine.match(/-\s+([0-9,]+\.[0-9]{2})\s+([0-9,]+\.[0-9]{2})/);
-    // Pattern 2: Debit in table column: "65,000.00 - 7,38,650.00"
-    const drColMatch = lastLine.match(/([0-9,]+\.[0-9]{2})\s+-\s+([0-9,]+\.[0-9]{2})/);
+    // Pattern 1: Credit in table column: "- 3,85,000.00 8,03,650.00" or "\t-\t3,85,000.00\t8,03,650.00"
+    const crColMatch = lastLine.match(/(?:^|[\s\t])-\s+([0-9,]+\.[0-9]{2})\s+([0-9,]+\.[0-9]{2})/);
+    // Pattern 2: Debit in table column: "65,000.00 - 7,38,650.00" or "\t65,000.00\t-\t7,38,650.00"
+    const drColMatch = lastLine.match(/(?:^|[\s\t])([0-9,]+\.[0-9]{2})\s+-\s+([0-9,]+\.[0-9]{2})/);
 
     if (crColMatch) {
       type = 'income';
@@ -425,24 +479,26 @@ export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
       const nums = amountMatches.map(a => parseFloat(a.replace(/,/g, '')));
       if (nums.length >= 2) {
         balance = nums[nums.length - 1];
-        finalAmount = nums[0];
+        finalAmount = nums[nums.length - 2];
 
-        // Specific keyword overrides first
-        if (/cashback|cash back|reversal credit|dividend credit|salary credit|payroll|stipend|interest credit|int\.pd/i.test(fullBlockText)) {
-          type = 'income';
-        } else if (prevBalance !== null && balance !== null) {
+        // Precise balance delta check
+        if (prevBalance !== null && balance !== null) {
           const diff = Math.round((balance - prevBalance) * 100) / 100;
-          if (Math.abs(Math.abs(diff) - finalAmount) < 0.05) {
+          if (Math.abs(Math.abs(diff) - finalAmount) < 0.1) {
             type = diff > 0 ? 'income' : 'expense';
+          } else if (diff > 0) {
+            type = 'income';
+          } else if (diff < 0) {
+            type = 'expense';
           } else {
-            type = /cashback|deposit|salary|interest|credit|refund/i.test(fullBlockText) ? 'income' : 'expense';
+            type = /\bCR-/i.test(fullBlockText) || /\b(?:cr|credit|deposit|salary|refund|cashback)\b/i.test(fullBlockText) ? 'income' : 'expense';
           }
         } else {
-          type = /cashback|deposit|salary|interest|credit|refund/i.test(fullBlockText) ? 'income' : 'expense';
+          type = /\bCR-/i.test(fullBlockText) || /\b(?:cr|credit|deposit|salary|refund|cashback)\b/i.test(fullBlockText) ? 'income' : 'expense';
         }
       } else {
         finalAmount = nums[0];
-        type = /cashback|deposit|salary|interest|credit|refund/i.test(fullBlockText) ? 'income' : 'expense';
+        type = /\bCR-/i.test(fullBlockText) || /\b(?:cr|credit|deposit|salary|refund|cashback)\b/i.test(fullBlockText) ? 'income' : 'expense';
       }
     }
 
@@ -464,6 +520,18 @@ export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
       .replace(/[₹$€£,;|\-\/]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
+
+    // Guardrail against header leak into transactions
+    if (
+      desc.toLowerCase().includes('account holder details') ||
+      desc.toLowerCase().includes('opening balance') ||
+      desc.toLowerCase().includes('closing net balance') ||
+      desc.toLowerCase().startsWith('period:') ||
+      desc.toLowerCase().includes('entity name:') ||
+      desc.toLowerCase().includes('proprietor:')
+    ) {
+      continue;
+    }
 
     transactions.push({
       date: normalizeDate(block.date),

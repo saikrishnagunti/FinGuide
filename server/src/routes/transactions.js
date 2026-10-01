@@ -135,7 +135,7 @@ function extractCsvFromHeader(fileContent) {
 /**
  * Sync monthly snapshots from transactions table so I&E snapshots stay updated automatically.
  */
-function syncSnapshotsFromTransactions(db, userId) {
+export function syncSnapshotsFromTransactions(db, userId) {
   try {
     const months = db.all(`
       SELECT DISTINCT 

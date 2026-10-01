@@ -346,6 +346,10 @@ def parse_statement_with_pdfplumber(pdf_bytes: bytes) -> dict[str, Any]:
                         continue
 
                     clean_desc = re.sub(r"\s+", " ", raw_desc or "Bank Transaction").strip()
+                    lower_desc = clean_desc.lower()
+                    if any(k in lower_desc for k in ["opening balance", "closing balance", "closing available balance", "account holder details", "total debits count", "total credits count", "period:"]):
+                        continue
+
                     category = auto_categorize(clean_desc, txn_type)
                     std_date = standardize_date(raw_date)
 
@@ -413,6 +417,9 @@ def _parse_statement_from_text(pdf: pdfplumber.PDF) -> list[dict[str, Any]]:
                 "period:", "statement of", "account statement", "page ",
                 "narration / description", "opening balance", "closing balance",
                 "customer name", "branch:", "ifsc", "total withdrawal", "total deposit",
+                "closing available balance", "total debits count", "total credits count",
+                "corporate & current account disclosures", "verification:", "registered office:",
+                "entity name:", "proprietor:", "account holder details", "abbreviations",
             ]):
                 continue
 
@@ -440,8 +447,11 @@ def _parse_statement_from_text(pdf: pdfplumber.PDF) -> list[dict[str, Any]]:
             if not candidates:
                 continue
 
-            # First amount is the transaction amount
-            amt, amt_str = candidates[0]
+            # In multi-column statements, last amount is balance, previous is transaction amount
+            if len(candidates) >= 2:
+                amt, amt_str = candidates[-2]
+            else:
+                amt, amt_str = candidates[0]
 
             # Clean description
             desc = post_date_text
@@ -450,8 +460,12 @@ def _parse_statement_from_text(pdf: pdfplumber.PDF) -> list[dict[str, Any]]:
             desc = re.sub(r"\b(?:UPI|NEFT|RTGS|IMPS|CARD|REF|CHQ|POS|TRANSFER|CHQ/REF|NO\.)[0-9A-Za-z\-]*\b", "", desc, flags=re.IGNORECASE)
             desc = re.sub(r"[\s\t,;|\-]+", " ", desc).strip()
 
-            # Determine type
-            if any(w in lower_line for w in ["cr", "credit", "deposit", "salary", "refund"]):
+            lower_desc = desc.lower()
+            if any(k in lower_desc for k in ["opening balance", "closing balance", "closing available balance", "account holder details", "total debits count", "total credits count"]):
+                continue
+
+            # Determine type using word boundaries and column indicators
+            if re.search(r"\bCR-|\b(?:cr|credit|deposit|salary|refund|cashback)\b", line_clean, re.IGNORECASE):
                 txn_type = "income"
             else:
                 txn_type = "expense"
