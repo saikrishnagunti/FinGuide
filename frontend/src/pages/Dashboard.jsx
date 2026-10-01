@@ -185,8 +185,16 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [forecastLoading, setForecastLoading] = useState(false);
   const { isDark } = useTheme();
-  const [chartView, setChartView] = useState('area'); // 'area' | 'bar' | 'net'
-  const [timeRange, setTimeRange] = useState('1m'); // '1m' | '6m' | '12m' | 'all'
+  const [timeRange, setTimeRange] = useState(() => {
+    return localStorage.getItem('finguide_time_range') || 'all';
+  });
+
+  const handleTimeRangeChange = (newRange) => {
+    setTimeRange(newRange);
+    try {
+      localStorage.setItem('finguide_time_range', newRange);
+    } catch {}
+  };
   const [hoveredCategory, setHoveredCategory] = useState(null);
 
   const donutColors = isDark ? DONUT_COLORS_DARK : DONUT_COLORS_LIGHT;
@@ -447,7 +455,7 @@ export default function Dashboard() {
             <select
               className="period-select"
               value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
+              onChange={(e) => handleTimeRangeChange(e.target.value)}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -479,7 +487,7 @@ export default function Dashboard() {
             <button
               type="button"
               className={`chart-pill-btn ${timeRange === '1m' ? 'active' : ''}`}
-              onClick={() => setTimeRange('1m')}
+              onClick={() => handleTimeRangeChange('1m')}
               style={{ fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-full)' }}
             >
               1M
@@ -487,7 +495,7 @@ export default function Dashboard() {
             <button
               type="button"
               className={`chart-pill-btn ${timeRange === '6m' ? 'active' : ''}`}
-              onClick={() => setTimeRange('6m')}
+              onClick={() => handleTimeRangeChange('6m')}
               style={{ fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-full)' }}
             >
               6M
@@ -495,7 +503,7 @@ export default function Dashboard() {
             <button
               type="button"
               className={`chart-pill-btn ${timeRange === '12m' ? 'active' : ''}`}
-              onClick={() => setTimeRange('12m')}
+              onClick={() => handleTimeRangeChange('12m')}
               style={{ fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-full)' }}
             >
               12M
@@ -503,7 +511,7 @@ export default function Dashboard() {
             <button
               type="button"
               className={`chart-pill-btn ${timeRange === 'all' ? 'active' : ''}`}
-              onClick={() => setTimeRange('all')}
+              onClick={() => handleTimeRangeChange('all')}
               style={{ fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-full)' }}
             >
               All
@@ -739,28 +747,28 @@ export default function Dashboard() {
                 <button
                   type="button"
                   className={`chart-pill-btn ${timeRange === '1m' ? 'active' : ''}`}
-                  onClick={() => setTimeRange('1m')}
+                  onClick={() => handleTimeRangeChange('1m')}
                 >
                   1M
                 </button>
                 <button
                   type="button"
                   className={`chart-pill-btn ${timeRange === '6m' ? 'active' : ''}`}
-                  onClick={() => setTimeRange('6m')}
+                  onClick={() => handleTimeRangeChange('6m')}
                 >
                   6M
                 </button>
                 <button
                   type="button"
                   className={`chart-pill-btn ${timeRange === '12m' ? 'active' : ''}`}
-                  onClick={() => setTimeRange('12m')}
+                  onClick={() => handleTimeRangeChange('12m')}
                 >
                   12M
                 </button>
                 <button
                   type="button"
                   className={`chart-pill-btn ${timeRange === 'all' ? 'active' : ''}`}
-                  onClick={() => setTimeRange('all')}
+                  onClick={() => handleTimeRangeChange('all')}
                 >
                   All
                 </button>
