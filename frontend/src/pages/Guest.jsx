@@ -26,6 +26,54 @@ import {
   Info,
 } from 'lucide-react';
 
+const auditMarkdownComponents = {
+  table: ({ node, ...props }) => (
+    <div className="audit-table-container">
+      <table className="audit-table" {...props} />
+    </div>
+  ),
+  th: ({ node, ...props }) => <th className="audit-th" {...props} />,
+  td: ({ node, children, ...props }) => {
+    const text = Array.isArray(children)
+      ? children.map(c => (typeof c === 'string' ? c : (c?.props?.children || ''))).join(' ')
+      : String(children || '');
+
+    if (/high concentration|critical|deficit/i.test(text)) {
+      return (
+        <td className="audit-td" {...props}>
+          <span className="audit-pill audit-pill-danger">{children}</span>
+        </td>
+      );
+    }
+    if (/moderate|caution|warning/i.test(text)) {
+      return (
+        <td className="audit-td" {...props}>
+          <span className="audit-pill audit-pill-warning">{children}</span>
+        </td>
+      );
+    }
+    if (/controlled|optimal|sound|low/i.test(text)) {
+      return (
+        <td className="audit-td" {...props}>
+          <span className="audit-pill audit-pill-success">{children}</span>
+        </td>
+      );
+    }
+    return <td className="audit-td tabular-nums" {...props}>{children}</td>;
+  },
+  blockquote: ({ node, ...props }) => (
+    <div className="audit-callout">
+      <blockquote {...props} />
+    </div>
+  ),
+  h2: ({ node, ...props }) => <h3 className="audit-heading" {...props} />,
+  h3: ({ node, ...props }) => <h3 className="audit-heading" {...props} />,
+  ul: ({ node, ...props }) => <ul className="audit-checklist" {...props} />,
+  ol: ({ node, ...props }) => <ol className="audit-directives" {...props} />,
+  li: ({ node, ...props }) => <li className="audit-item" {...props} />,
+  hr: () => <hr className="audit-divider" />,
+};
+
 const SAMPLE_INCOME = {
   Salary: 125000,
   Freelance: 25000,
@@ -219,10 +267,10 @@ export default function Guest() {
 
   // Determine effective quick stats
   const quickStats = analysisResult?.sections?.find(s => s.title === 'Quick Stats')?.data || {};
-  const totalIncomeVal = quickStats.total_income ?? formIncome;
-  const totalExpensesVal = quickStats.total_expenses ?? formExpenses;
-  const netSavingsVal = quickStats.net_savings ?? (totalIncomeVal - totalExpensesVal);
-  const savingsRateVal = quickStats.savings_rate ?? (totalIncomeVal > 0 ? ((netSavingsVal / totalIncomeVal) * 100).toFixed(1) : 0);
+  const totalIncomeVal = Number(quickStats.total_income ?? formIncome ?? 0);
+  const totalExpensesVal = Number(quickStats.total_expenses ?? formExpenses ?? 0);
+  const netSavingsVal = Number(quickStats.net_savings ?? (totalIncomeVal - totalExpensesVal));
+  const savingsRateVal = Number(quickStats.savings_rate ?? (totalIncomeVal > 0 ? ((netSavingsVal / totalIncomeVal) * 100).toFixed(1) : 0));
   const topCategories = quickStats.top_categories || [];
 
   return (
@@ -328,7 +376,7 @@ export default function Guest() {
                         <TrendingUp size={18} style={{ color: 'var(--success)' }} />
                         <h4>Monthly Income (Inflows)</h4>
                       </div>
-                      <span className="col-total">₹{formIncome.toLocaleString()}</span>
+                      <span className="col-total">₹{(formIncome || 0).toLocaleString()}</span>
                     </div>
 
                     <div className="fields-grid">
@@ -358,7 +406,7 @@ export default function Guest() {
                         <TrendingDown size={18} style={{ color: 'var(--danger)' }} />
                         <h4>Monthly Expenses (Outflows)</h4>
                       </div>
-                      <span className="col-total">₹{formExpenses.toLocaleString()}</span>
+                      <span className="col-total">₹{(formExpenses || 0).toLocaleString()}</span>
                     </div>
 
                     <div className="fields-grid">
@@ -387,16 +435,16 @@ export default function Guest() {
                   <div className="guest-form-summary-ribbon">
                     <div className="ribbon-metric">
                       <span>Total Income</span>
-                      <strong>₹{formIncome.toLocaleString()}</strong>
+                      <strong>₹{(formIncome || 0).toLocaleString()}</strong>
                     </div>
                     <div className="ribbon-metric">
                       <span>Total Expenses</span>
-                      <strong>₹{formExpenses.toLocaleString()}</strong>
+                      <strong>₹{(formExpenses || 0).toLocaleString()}</strong>
                     </div>
                     <div className="ribbon-metric">
                       <span>Net Cash Flow</span>
                       <strong className={formNetSavings >= 0 ? 'text-success' : 'text-danger'}>
-                        ₹{formNetSavings.toLocaleString()}
+                        ₹{(formNetSavings || 0).toLocaleString()}
                       </strong>
                     </div>
                     <div className="ribbon-metric">
@@ -483,18 +531,18 @@ export default function Guest() {
                         <div className="meta-stat-item">
                           <span>Total Inflows</span>
                           <strong className="text-success">
-                            ₹{parsedStatement.total_income?.toLocaleString() || '0'}
+                            ₹{Number(parsedStatement?.total_income || 0).toLocaleString()}
                           </strong>
                         </div>
                         <div className="meta-stat-item">
                           <span>Total Outflows</span>
                           <strong className="text-danger">
-                            ₹{parsedStatement.total_expenses?.toLocaleString() || '0'}
+                            ₹{Number(parsedStatement?.total_expenses || 0).toLocaleString()}
                           </strong>
                         </div>
                         <div className="meta-stat-item">
                           <span>Net</span>
-                          <strong>₹{parsedStatement.net_savings?.toLocaleString() || '0'}</strong>
+                          <strong>₹{Number(parsedStatement?.net_savings || 0).toLocaleString()}</strong>
                         </div>
                       </div>
                     </div>
@@ -528,7 +576,7 @@ export default function Guest() {
                                 </span>
                               </td>
                               <td style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                                ₹{txn.amount.toLocaleString()}
+                                ₹{Number(txn.amount || 0).toLocaleString()}
                               </td>
                               <td>
                                 <button
@@ -690,18 +738,18 @@ export default function Guest() {
                 <div className="audit-vitals-grid">
                   <div className="vital-card income">
                     <span className="vital-label">Total Monthly Inflows</span>
-                    <strong className="vital-value">₹{totalIncomeVal.toLocaleString()}</strong>
+                    <strong className="vital-value">₹{Number(totalIncomeVal || 0).toLocaleString()}</strong>
                     <span className="vital-subtext">Verified Current Session</span>
                   </div>
                   <div className="vital-card expense">
                     <span className="vital-label">Total Monthly Outflows</span>
-                    <strong className="vital-value">₹{totalExpensesVal.toLocaleString()}</strong>
+                    <strong className="vital-value">₹{Number(totalExpensesVal || 0).toLocaleString()}</strong>
                     <span className="vital-subtext">Verified Current Session</span>
                   </div>
                   <div className="vital-card net">
                     <span className="vital-label">Net Monthly Cash Flow</span>
                     <strong className={`vital-value ${netSavingsVal >= 0 ? 'text-success' : 'text-danger'}`}>
-                      ₹{netSavingsVal.toLocaleString()}
+                      ₹{Number(netSavingsVal || 0).toLocaleString()}
                     </strong>
                     <span className="vital-subtext">
                       {netSavingsVal >= 0 ? 'Surplus Cash Flow' : 'Deficit Cash Outflow'}
@@ -730,12 +778,14 @@ export default function Guest() {
                       <div key={idx} className="category-progress-item">
                         <div className="cat-label-row">
                           <span className="cat-name">{cat.category}</span>
-                          <span className="cat-amt">₹{cat.amount.toLocaleString()} ({cat.percentage}%)</span>
+                          <span className="cat-amt">
+                            ₹{Number(cat.amount ?? cat.total ?? 0).toLocaleString()} ({cat.percentage || 0}%)
+                          </span>
                         </div>
                         <div className="cat-progress-bar-bg">
                           <div
                             className="cat-progress-bar-fill"
-                            style={{ width: `${Math.min(cat.percentage, 100)}%` }}
+                            style={{ width: `${Math.min(Number(cat.percentage || 0), 100)}%` }}
                           />
                         </div>
                       </div>
@@ -752,7 +802,7 @@ export default function Guest() {
                 </div>
 
                 <div className="audit-prose-content markdown-content">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={auditMarkdownComponents}>
                     {analysisResult.raw_text || analysisResult.summary || ''}
                   </ReactMarkdown>
                 </div>

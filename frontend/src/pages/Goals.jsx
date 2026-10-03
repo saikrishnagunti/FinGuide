@@ -178,8 +178,8 @@ export default function Goals() {
 
                 <div style={{ marginBottom: 'var(--space-md)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-xs)', fontSize: 'var(--font-size-sm)' }}>
-                    <span className="tabular-nums" style={{ color: 'var(--text-secondary)' }}>{currency}{goal.current_amount.toLocaleString()}</span>
-                    <span className="tabular-nums" style={{ color: 'var(--text-muted)' }}>{currency}{goal.target_amount.toLocaleString()}</span>
+                    <span className="tabular-nums" style={{ color: 'var(--text-secondary)' }}>{currency}{(goal.current_amount || 0).toLocaleString()}</span>
+                    <span className="tabular-nums" style={{ color: 'var(--text-muted)' }}>{currency}{(goal.target_amount || 0).toLocaleString()}</span>
                   </div>
                   <div style={{
                     height: '8px', background: 'var(--bg-input)', borderRadius: 'var(--radius-full)',

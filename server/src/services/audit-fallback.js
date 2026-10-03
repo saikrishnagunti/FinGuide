@@ -79,6 +79,7 @@ export function generateFallbackAudit({
     .sort((a, b) => b[1] - a[1])
     .map(([cat, amt]) => ({
       category: cat,
+      amount: amt,
       total: amt,
       percentage: totalExpenses > 0 ? Math.round((amt / totalExpenses) * 1000) / 10 : 0,
     }));

@@ -138,6 +138,7 @@ def compute_quick_stats(
             {
                 "category": cat,
                 "amount": round(amt, 2),
+                "total": round(amt, 2),
                 "percentage": round(amt / total_exp * 100, 1) if total_exp > 0 else 0,
             }
             for cat, amt in sorted_cats[:8]
@@ -172,6 +173,7 @@ def compute_quick_stats(
                 {
                     "category": cat,
                     "amount": round(amt, 2),
+                    "total": round(amt, 2),
                     "percentage": round(amt / total_exp * 100, 1) if total_exp > 0 else 0,
                 }
                 for cat, amt in sorted_exp[:8]
