@@ -6,7 +6,7 @@ import { BarChart3, Shield, Zap, TrendingUp, Sun, Moon } from 'lucide-react';
 
 export default function Landing() {
   const { user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, resetToSystem, isManual } = useTheme();
 
   const features = [
     {
@@ -67,8 +67,13 @@ export default function Landing() {
           <button
             className="theme-toggle-btn"
             onClick={toggleTheme}
+            onDoubleClick={resetToSystem}
             aria-label={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+            title={
+              isManual
+                ? `Current: ${theme === 'dark' ? 'Dark' : 'Light'} (Manual). Click to toggle, double-click for Auto-System.`
+                : `Current: ${theme === 'dark' ? 'Dark' : 'Light'} (Auto-synced with System). Click to toggle.`
+            }
           >
             {theme === 'dark' ? <Sun size={15} className="theme-icon sun" /> : <Moon size={15} className="theme-icon moon" />}
             <span className="theme-label">{theme === 'dark' ? 'Light' : 'Dark'}</span>

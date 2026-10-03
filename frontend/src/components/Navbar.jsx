@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar({ title, onMenuToggle }) {
   const { user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, resetToSystem, isManual } = useTheme();
   const currency = user?.currency || '₹';
 
   return (
@@ -25,12 +25,17 @@ export default function Navbar({ title, onMenuToggle }) {
       </div>
 
       <div className="navbar-actions">
-        {/* Dynamic Light/Dark Theme Switcher */}
+        {/* Dynamic Light/Dark Theme Switcher (Synced with System by default) */}
         <button
           className="theme-toggle-btn"
           onClick={toggleTheme}
+          onDoubleClick={resetToSystem}
           aria-label={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
-          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+          title={
+            isManual
+              ? `Current: ${theme === 'dark' ? 'Dark' : 'Light'} (Manual). Click to toggle, double-click for Auto-System.`
+              : `Current: ${theme === 'dark' ? 'Dark' : 'Light'} (Auto-synced with System). Click to toggle.`
+          }
         >
           {theme === 'dark' ? (
             <>
