@@ -3,6 +3,7 @@ import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useAdvisor } from '../context/AdvisorContext';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   FileText,
   Printer,
@@ -20,6 +21,54 @@ import {
   HelpCircle,
   Search,
 } from 'lucide-react';
+
+const auditMarkdownComponents = {
+  table: ({ node, ...props }) => (
+    <div className="audit-table-container">
+      <table className="audit-table" {...props} />
+    </div>
+  ),
+  th: ({ node, ...props }) => <th className="audit-th" {...props} />,
+  td: ({ node, children, ...props }) => {
+    const text = Array.isArray(children)
+      ? children.map(c => (typeof c === 'string' ? c : (c?.props?.children || ''))).join(' ')
+      : String(children || '');
+
+    if (/high concentration|critical|deficit/i.test(text)) {
+      return (
+        <td className="audit-td" {...props}>
+          <span className="audit-pill audit-pill-danger">{children}</span>
+        </td>
+      );
+    }
+    if (/moderate|caution|warning/i.test(text)) {
+      return (
+        <td className="audit-td" {...props}>
+          <span className="audit-pill audit-pill-warning">{children}</span>
+        </td>
+      );
+    }
+    if (/controlled|optimal|sound|low/i.test(text)) {
+      return (
+        <td className="audit-td" {...props}>
+          <span className="audit-pill audit-pill-success">{children}</span>
+        </td>
+      );
+    }
+    return <td className="audit-td tabular-nums" {...props}>{children}</td>;
+  },
+  blockquote: ({ node, ...props }) => (
+    <div className="audit-callout">
+      <blockquote {...props} />
+    </div>
+  ),
+  h2: ({ node, ...props }) => <h3 className="audit-heading" {...props} />,
+  h3: ({ node, ...props }) => <h3 className="audit-heading" {...props} />,
+  ul: ({ node, ...props }) => <ul className="audit-checklist" {...props} />,
+  ol: ({ node, ...props }) => <ol className="audit-directives" {...props} />,
+  li: ({ node, ...props }) => <li className="audit-item" {...props} />,
+  hr: () => <hr className="audit-divider" />,
+};
 
 const PERIOD_OPTIONS = [
   { value: 'current', label: 'This Month (Current)' },
@@ -346,7 +395,9 @@ export default function Analysis() {
               </div>
               <div className="audit-narrative-card">
                 <div className="markdown-content">
-                  <ReactMarkdown>{result.raw_text}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={auditMarkdownComponents}>
+                    {result.raw_text}
+                  </ReactMarkdown>
                 </div>
               </div>
             </section>

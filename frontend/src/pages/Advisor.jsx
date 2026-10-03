@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Send, Bot, Sparkles, CheckCircle2, XCircle, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
 
 export default function Advisor() {
@@ -178,7 +179,7 @@ export default function Advisor() {
 
                   {/* Main Response Markdown */}
                   <div className="markdown-content">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                   </div>
 
                   {/* Human-in-the-Loop (HITL) Interactive Action Card */}

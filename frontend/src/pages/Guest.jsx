@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { api } from '../utils/api';
 import BrandLogo from '../components/BrandLogo';
 import {
@@ -750,8 +751,8 @@ export default function Guest() {
                   <span className="section-pill">AI Financial Insights</span>
                 </div>
 
-                <div className="audit-prose-content">
-                  <ReactMarkdown>
+                <div className="audit-prose-content markdown-content">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {analysisResult.raw_text || analysisResult.summary || ''}
                   </ReactMarkdown>
                 </div>

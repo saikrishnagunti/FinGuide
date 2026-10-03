@@ -106,30 +106,26 @@ export function generateFallbackAudit({
 
   // 5. Generate Formal Markdown Audit Report
   const markdownReport = `
-## Formal Financial Audit & Diagnostic Assessment
-**Audited Entity:** ${userName}  
-**Audit Scope:** ${periodLabel}  
-**Assessment Status:** Verified Official Diagnostic  
-
----
-
 ### 1. Executive Solvency & Cash Flow Summary
+
+> **Solvency Assessment: ${solvencyStatus}**  
+> ${isSurplus 
+  ? `The account maintains an operational surplus of **${formatCurrency(netSavings, currency)}**, retaining **${savingsRate}%** of top-line cash inflows. Working capital remains sound, with liquidity sufficient to service debt obligations, payroll, and routine operational commitments.`
+  : `The current operating period exhibits an outflow deficit of **${formatCurrency(Math.abs(netSavings), currency)}**. Total expenditures exceed period revenues by **${Math.abs(savingsRate)}%**, indicating reliance on prior balance reserves or external financing.`
+}
+
 - **Gross Operating Inflow (Income):** ${formatCurrency(totalIncome, currency)}
 - **Total Operational Expenditure:** ${formatCurrency(totalExpenses, currency)}
 - **Net Operating Cash Flow:** **${isSurplus ? '+' : ''}${formatCurrency(netSavings, currency)}**
 - **Operating Retention (Savings Rate):** **${savingsRate}%** (${solvencyStatus})
 
-${isSurplus 
-  ? `The account maintains an operational surplus of **${formatCurrency(netSavings, currency)}**, retaining **${savingsRate}%** of top-line cash inflows. Working capital remains sound, with liquidity sufficient to service debt obligations, payroll, and routine operational commitments.`
-  : `The current operating period exhibits an outflow deficit of **${formatCurrency(Math.abs(netSavings), currency)}**. Total expenditures exceed period revenues by **${Math.abs(savingsRate)}%**, indicating reliance on prior balance reserves or external financing.`
-}
-
 ---
 
 ### 2. Category Concentration & Burn-Rate Diagnostics
+
 A breakdown of major expense drivers reveals the following structural cost centers:
 
-| Cost Center / Category | Audited Expenditure | Share of Total Outflow | Risk Level |
+| Cost Center / Category | Audited Expenditure | Share of Outflow | Risk Assessment |
 | :--- | :--- | :--- | :--- |
 ${sortedCategories.slice(0, 6).map(c => `| **${c.category}** | ${formatCurrency(c.total, currency)} | ${c.percentage}% | ${c.percentage > 35 ? '⚠️ High Concentration' : c.percentage > 15 ? '🟡 Moderate' : '🟢 Controlled'} |`).join('\n')}
 
@@ -140,15 +136,17 @@ ${sortedCategories.slice(0, 6).map(c => `| **${c.category}** | ${formatCurrency(
 ---
 
 ### 3. Liquidity, Runway & Financial Health Checklist
-- **Liquidity Cushion:** Operating cash flow is **${isSurplus ? 'positive' : 'negative'}**.
-- **Fixed vs. Variable Ratio:** Essential operating obligations (payroll, lease, tax, debt EMI) constitute core fixed requirements; discretionary vendor payments should be monitored against monthly collection cycles.
-- **Financial Goals Progress:** ${goals.length > 0 ? `Currently tracking **${goals.length}** active financial milestones.` : 'No explicit milestone caps currently configured.'}
+
+- 🛡️ **Liquidity Cushion:** Operating cash flow is **${isSurplus ? 'Positive (Surplus Generated)' : 'Negative (Operating Deficit)'}**.
+- ⚖️ **Fixed vs. Variable Ratio:** Core essential commitments (payroll, housing, taxes, debt EMIs) form non-discretionary baseline; discretionary spend should be capped against monthly inflow cycles.
+- 🎯 **Financial Goals Progress:** ${goals.length > 0 ? `Currently tracking **${goals.length}** active financial milestones.` : 'No active financial milestone goals currently configured.'}
 
 ---
 
 ### 4. Strategic Financial Directives
+
 1. **${isSurplus ? 'Capital Re-allocation' : 'Deficit Mitigation'}:** ${isSurplus ? `Direct a portion of monthly operating surplus (${formatCurrency(netSavings, currency)}) into high-yield contingency reserves to buffer against cyclical cash collection dips.` : 'Conduct an immediate line-item review of non-essential supplier and discretionary disbursements to re-establish operating break-even.'}
-2. **Cap Outflow Concentration:** Implement a targeted cap of 30% maximum single-category exposure for **${topCategory.category}**.
+2. **Cap Outflow Concentration:** Implement a targeted cap of 30% maximum single-category exposure for **${topCategory.category}** to prevent structural budget drift.
 3. **Working Capital Alignment:** Synchronize merchant collection batches and client advance invoices with debt loan EMI and bulk vendor payables.
 `.trim();
 

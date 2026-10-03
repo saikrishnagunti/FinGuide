@@ -27,18 +27,41 @@ COMMUNICATION PRINCIPLES
 Format your responses with clear section headings using markdown."""
 
 
-ANALYSIS_PROMPT = """Analyze the following financial data and provide a comprehensive summary adhering to financial safety guidelines.
+ANALYSIS_PROMPT = """Analyze the following financial data and provide a comprehensive, executive-grade Financial Audit report adhering to financial safety guidelines.
 
 {context}
 
 User's question/request: {query}
 
-Provide your analysis with these sections:
-1. **📊 Financial Summary** — Key numbers: total income, total expenses, net savings, savings rate
-2. **📂 Where Your Money Went** — Category-wise spending breakdown (top categories)
-3. **📈 Trends & Comparisons** — Changes compared to previous periods (if data available)
-4. **💡 Key Insights** — 3-5 clear, actionable observations
-5. **✅ Recommended Actions** — 2-4 realistic, prudent steps to improve cash flow
+Provide your analysis structured strictly with the following clear markdown sections:
+### 1. Executive Solvency & Cash Flow Summary
+> **Solvency Assessment:** Provide an evaluation of net operating cash flow and savings retention.
+- **Gross Operating Inflow (Income):** Total verified inflows
+- **Total Operational Expenditure:** Total audited outflows
+- **Net Operating Cash Flow:** Surplus or deficit
+- **Operating Retention (Savings Rate):** Savings rate percentage with stability rating
+
+### 2. Category Concentration & Burn-Rate Diagnostics
+A breakdown of major expense drivers reveals the following structural cost centers:
+
+| Cost Center / Category | Audited Expenditure | Share of Outflow | Risk Assessment |
+| :--- | :--- | :--- | :--- |
+
+(List the top 4-6 categories in the table above, marking Risk Assessment as ⚠️ High Concentration, 🟡 Moderate, or 🟢 Controlled)
+
+- **Primary Outflow Driver:** Name and share of top category
+- **Secondary Cost Driver:** Name and share of second category
+- **Cost Volatility Analysis:** Assessment of variable leakage and concentration risk
+
+### 3. Liquidity, Runway & Financial Health Checklist
+- 🛡️ **Liquidity Cushion:** Assessment of operating runway
+- ⚖️ **Fixed vs. Variable Ratio:** Assessment of non-discretionary commitments vs lifestyle spend
+- 🎯 **Financial Goals Progress:** Assessment of progress toward savings targets
+
+### 4. Strategic Financial Directives
+1. **Capital Allocation / Deficit Directive:** Immediate action step
+2. **Category Exposure Cap:** Specific percentage limit for highest spending category
+3. **Treasury & Working Capital Alignment:** Cash flow synchronization step
 
 Rules:
 - For each number, explain what it means in simple terms.

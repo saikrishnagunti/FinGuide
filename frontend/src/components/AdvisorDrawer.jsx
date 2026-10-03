@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useAdvisor } from '../context/AdvisorContext';
 import { api } from '../utils/api';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Send,
   Bot,
@@ -270,7 +271,7 @@ export default function AdvisorDrawer() {
 
                 {/* Markdown content */}
                 <div className="markdown-content">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                 </div>
 
                 {/* HITL Action Proposal Card */}
