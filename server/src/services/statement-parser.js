@@ -38,16 +38,18 @@ export function autoCategorize(description, rawCategory) {
   const desc = (description || '').toLowerCase();
 
   if (/salary|payroll|stipend|interest credit|dividend|neft credit|bonus/i.test(desc)) return 'Salary & Income';
-  if (/swiggy|zomato|starbucks|mcdonald|kfc|pizza|burger|cafe|restaurant|baking|dining|eat/i.test(desc)) return 'Food & Dining';
-  if (/blinkit|zepto|instamart|dmart|bigbasket|supermarket|grocery|groceries|spencer|fresh/i.test(desc)) return 'Groceries';
-  if (/uber|ola|rapido|metro|petrol|fuel|shell|bpcl|hpcl|toll|fastag|commute|cab/i.test(desc)) return 'Transportation';
-  if (/amazon|flipkart|myntra|ajio|zara|h&m|shopping|retail|store|mall|nykaa/i.test(desc)) return 'Shopping';
-  if (/netflix|spotify|prime|hotstar|youtube|movie|cinema|pvr|inox|entertainment|game|playstation/i.test(desc)) return 'Entertainment';
-  if (/rent|maintenance|society|housing|landlord|estate/i.test(desc)) return 'Housing';
-  if (/bescom|electricity|water|airtel|jio|vi|broadband|wifi|tataplay|dth|gas|cylinder|utility|utilities/i.test(desc)) return 'Utilities';
-  if (/pharmacy|hospital|clinic|apollo|1mg|practo|medplus|doctor|health|wellness/i.test(desc)) return 'Healthcare';
-  if (/insurance|lic|hdfc life|max life|star health|policy/i.test(desc)) return 'Insurance';
-  if (/sip|zerodha|groww|mutual fund|upstox|mf|investment|etmoney/i.test(desc)) return 'Investments';
+  if (/swiggy|zomato|starbucks|mcdonald|kfc|pizza|burger|cafe|restaurant|baking|dining|eat|domino|barbeque|paradise/i.test(desc)) return 'Food & Dining';
+  if (/blinkit|zepto|instamart|dmart|bigbasket|supermarket|grocery|groceries|spencer|fresh|kirana|provision/i.test(desc)) return 'Groceries';
+  if (/uber|ola|rapido|metro|petrol|fuel|shell|bpcl|hpcl|ioc|toll|fastag|commute|cab|irctc|railway|parking/i.test(desc)) return 'Transportation';
+  if (/amazon|flipkart|myntra|ajio|zara|h&m|shopping|retail|store|mall|nykaa|croma|reliance.?digital/i.test(desc)) return 'Shopping';
+  if (/netflix|spotify|prime|hotstar|youtube|movie|cinema|pvr|inox|entertainment|game|playstation|bookmyshow|steam/i.test(desc)) return 'Entertainment';
+  if (/rent|maintenance|society|housing|landlord|estate|flat|mortgage/i.test(desc)) return 'Housing';
+  if (/bescom|electricity|water|airtel|jio|vi|broadband|wifi|tataplay|dth|gas|cylinder|utility|utilities|tsspdcl|mseb|tneb|cesc|power|indane|fibernet|act fibernet/i.test(desc)) return 'Utilities';
+  if (/pharmacy|hospital|clinic|apollo|1mg|practo|medplus|doctor|health|wellness|apollophar|diagnostics|dental/i.test(desc)) return 'Healthcare';
+  if (/insurance|lic|hdfc life|max life|star health|policy|tata aia|premium/i.test(desc)) return 'Insurance';
+  if (/sip|zerodha|groww|mutual fund|upstox|mf|investment|etmoney|angelone|kuvera/i.test(desc)) return 'Investments';
+  if (/emi|loan|tata capital|bajaj fin|equated monthly/i.test(desc)) return 'Loan & EMI';
+  if (/gst|advance tax|income tax|itns|cbdt|tds|challan/i.test(desc)) return 'Taxes';
 
   return 'General';
 }

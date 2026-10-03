@@ -46,6 +46,11 @@ DATE_PATTERNS = [
     (r"\b(\d{1,2})[\s\-]([A-Za-z]{3})[\s\-](\d{2})\b", "%d-%b-%y"),
 ]
 
+# Strict date-start pattern for checking if a string starts with a date
+_DATE_START_RE = re.compile(
+    r"^(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2}|\d{1,2}[\s\-][A-Za-z]{3}[\s\-]\d{2,4})"
+)
+
 
 def parse_clean_float(val: Any) -> float:
     """Parse a string into a clean float, removing currency symbols, commas, and Cr/Dr tags."""
@@ -55,7 +60,7 @@ def parse_clean_float(val: Any) -> float:
     if not s or s in ["-", "--", "nil", "null"]:
         return 0.0
     # Remove currency words/symbols like Rs, Rs., INR, USD, EUR, GBP, ₹, $, €, £
-    s = re.sub(r"(?i)(?:rs\.|rs\b|inr\b|usd\b|eur\b|gbp\b)", "", s)
+    s = re.sub(r"(?i)(?:rs\.?|rs\b|inr\b|usd\b|eur\b|gbp\b)", "", s)
     s = re.sub(r"[₹$€£\s]", "", s)
     # Remove thousands commas (NOT decimal points)
     s = s.replace(",", "")
@@ -113,16 +118,22 @@ def auto_categorize(description: str, txn_type: str = "expense") -> str:
         return "Transportation"
     if any(k in d for k in ["rent", "landlord", "maintenance", "society", "home loan", "housing", "mortgage", "flat"]):
         return "Housing"
-    if any(k in d for k in ["bescom", "electricity", "mseb", "tneb", "cesc", "power", "water", "airtel", "jio", "vodafone", "vi", "broadband", "wifi", "gas", "indane", "hp gas", "bharat gas"]):
+    if any(k in d for k in ["bescom", "electricity", "mseb", "tneb", "cesc", "power", "water", "airtel", "jio", "vodafone", "vi", "broadband", "wifi", "gas", "indane", "hp gas", "bharat gas", "tsspdcl"]):
         return "Utilities"
     if any(k in d for k in ["netflix", "spotify", "prime", "hotstar", "youtube", "bookmyshow", "cinema", "pvr", "inox", "movie", "entertainment", "steam", "playstation"]):
         return "Entertainment"
-    if any(k in d for k in ["amazon", "flipkart", "myntra", "ajio", "nykaa", "tata cliq", "zara", "h&m", "shopping", "retail", "clothing", "croma", "reliancedigital"]):
+    if any(k in d for k in ["amazon", "flipkart", "myntra", "ajio", "nykaa", "tata cliq", "zara", "h&m", "shopping", "retail", "clothing", "croma", "reliancedigital", "reliance digital"]):
         return "Shopping"
-    if any(k in d for k in ["pharmacy", "apollo", "1mg", "hospital", "clinic", "dental", "dr.", "medical", "medplus", "netmeds", "diagnostics", "lab"]):
+    if any(k in d for k in ["pharmacy", "apollo", "1mg", "hospital", "clinic", "dental", "dr.", "medical", "medplus", "netmeds", "diagnostics", "lab", "apollophar"]):
         return "Healthcare"
     if any(k in d for k in ["zerodha", "groww", "mutual fund", "sip", "upstox", "angelone", "coin", "kuvera", "nse", "bse", "investment", "share"]):
         return "Investments"
+    if any(k in d for k in ["emi", "loan", "tata capital", "bajaj fin"]):
+        return "Loan & EMI"
+    if any(k in d for k in ["gst", "advance tax", "income tax", "itns", "cbdt", "tds"]):
+        return "Taxes"
+    if any(k in d for k in ["insurance", "lic", "premium", "tata aia", "max life", "star health"]):
+        return "Insurance"
 
     return "General"
 
@@ -133,7 +144,7 @@ def extract_metadata(all_text: str) -> dict[str, Any]:
     lower_text = all_text.lower()
     detected_bank = "Bank Statement"
 
-    if "bankofbaroda" in lower_text or "barb0" in lower_text or "bob pay" in lower_text or "बैंक ऑफ़ बड़ौदा" in header_text or "bank of baroda" in header_text:
+    if "bankofbaroda" in lower_text or "barb0" in lower_text or "bob pay" in lower_text or "बैंक ऑफ़ बड़ौदा" in header_text or "bank of baroda" in header_text:
         detected_bank = "Bank of Baroda"
     elif "icicibank" in lower_text or "icic0" in lower_text or "icici bank" in header_text:
         detected_bank = "ICICI Bank"
@@ -182,7 +193,7 @@ def extract_metadata(all_text: str) -> dict[str, Any]:
 
     # Masked account number detection
     ac_match = re.search(
-        r"(?:account\s*(?:no|number|#|id)?|a\/c\s*(?:no)?|savings\s*account\s*(?:-\s*)?)\s*[:.-]?\s*([0-9Xx\*\-]{6,25})",
+        r"(?:account\s*(?:no|number|#|id)?|a\/c\s*(?:no)?|savings\s*account\s*(?:-\s*)?)[\s:.\-]*([0-9Xx\*\-]{6,25})",
         all_text,
         flags=re.IGNORECASE,
     )
@@ -195,17 +206,48 @@ def extract_metadata(all_text: str) -> dict[str, Any]:
         else:
             account_number = raw_ac
 
-    # Statement period detection
+    # Statement period detection - multiple patterns
+    period_start = None
+    period_end = None
+
+    # Pattern 1: "Period: DD/MM/YYYY to DD/MM/YYYY"
     period_match = re.search(
-        r"(?:period|statement\s*from|from)\s*[:.-]?\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s*(?:to|-|through)\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})",
+        r"(?:period|statement\s*from|from)\s*[:.\-]?\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s*(?:to|-|through)\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})",
         all_text,
         flags=re.IGNORECASE,
     )
-    period_start = None
-    period_end = None
     if period_match:
         period_start = standardize_date(period_match.group(1))
         period_end = standardize_date(period_match.group(2))
+
+    # Pattern 2: "Period: DD-Mon-YYYY to DD-Mon-YYYY"
+    if not period_start:
+        period_match = re.search(
+            r"(?:period|statement\s*from|from)\s*[:.\-]?\s*(\d{1,2}[\s\-][A-Za-z]{3}[\s\-]\d{2,4})\s*(?:to|-|through)\s*(\d{1,2}[\s\-][A-Za-z]{3}[\s\-]\d{2,4})",
+            all_text,
+            flags=re.IGNORECASE,
+        )
+        if period_match:
+            period_start = standardize_date(period_match.group(1))
+            period_end = standardize_date(period_match.group(2))
+
+    # Pattern 3: BOB-style "Statement Period from Aug 01, 2026 to Aug 31, 2026"
+    if not period_start:
+        period_match = re.search(
+            r"(?:period\s+from|from)\s+([A-Za-z]{3}\s+\d{1,2},?\s+\d{4})\s+to\s+([A-Za-z]{3}\s+\d{1,2},?\s+\d{4})",
+            all_text,
+            flags=re.IGNORECASE,
+        )
+        if period_match:
+            for fmt in ["%b %d, %Y", "%b %d %Y"]:
+                try:
+                    s_dt = datetime.strptime(period_match.group(1), fmt)
+                    e_dt = datetime.strptime(period_match.group(2), fmt)
+                    period_start = s_dt.strftime("%Y-%m-%d")
+                    period_end = e_dt.strftime("%Y-%m-%d")
+                    break
+                except ValueError:
+                    continue
 
     return {
         "bank_name": detected_bank,
@@ -215,151 +257,217 @@ def extract_metadata(all_text: str) -> dict[str, Any]:
     }
 
 
+def _is_valid_date(s: str) -> bool:
+    """Check if a string starts with a recognizable date pattern."""
+    return bool(_DATE_START_RE.match(s.strip()))
+
+
+def _is_noise_row(narration: str) -> bool:
+    """Check if a row is noise (header/footer/summary) rather than a transaction."""
+    low = narration.lower()
+    noise_phrases = [
+        "opening balance", "closing balance", "closing available balance",
+        "account holder details", "total debits count", "total credits count",
+        "period:", "abbreviations", "nominee details", "relationship type",
+        "base branch address", "end of statement", "statement continued",
+        "registered office:", "important messages", "corporate & current account",
+        "verification:", "a summary of your relationship",
+    ]
+    return any(phrase in low for phrase in noise_phrases)
+
+
+def _detect_type_from_columns(debit_str: str, credit_str: str, balance_str: str, narration: str) -> tuple[str, float]:
+    """
+    Determine transaction type and amount from separate debit/credit columns.
+    Returns (type, amount).
+    """
+    debit_val = parse_clean_float(debit_str)
+    credit_val = parse_clean_float(credit_str)
+
+    if credit_val > 0 and debit_val == 0:
+        return "income", credit_val
+    elif debit_val > 0 and credit_val == 0:
+        return "expense", debit_val
+    elif debit_val > 0 and credit_val > 0:
+        # Both present - use narration to disambiguate
+        if re.search(r"(?i)\bCR[\-\s]|credit|deposit|salary|refund|cashback", narration):
+            return "income", credit_val
+        return "expense", debit_val
+
+    return "", 0.0
+
+
+def _merge_fragmented_tables(pdf: pdfplumber.PDF) -> list[dict[str, Any]]:
+    """
+    Handle banks like BOB where each transaction is in its own table.
+    Strategy: Collect ALL table rows across ALL pages, identify the column structure
+    from a header row, then apply it uniformly to all data rows.
+    """
+    all_rows: list[list[str]] = []
+    col_map: dict[str, int] = {}
+    header_found = False
+
+    for page in pdf.pages:
+        tables = page.extract_tables()
+        if not tables:
+            continue
+
+        for table in tables:
+            if not table:
+                continue
+
+            for row in table:
+                if not row or not any(str(c or "").strip() for c in row):
+                    continue
+
+                clean_row = [str(c or "").strip() for c in row]
+                joined_lower = " ".join(c.lower() for c in clean_row)
+
+                # Detect header row
+                if not header_found:
+                    has_date = any(k in joined_lower for k in ["date", "txn date", "value date", "posting"])
+                    has_desc = any(k in joined_lower for k in ["narration", "particulars", "description", "details", "remarks"])
+                    has_amt = any(k in joined_lower for k in ["withdrawal", "deposit", "debit", "credit", "amount", "balance", "dr", "cr"])
+
+                    if has_date and (has_desc or has_amt):
+                        header_found = True
+                        for c_idx, col_name in enumerate(clean_row):
+                            cn = col_name.lower()
+                            if not cn:
+                                continue
+                            if any(k in cn for k in ["txn date", "transaction date", "value date", "posting date", "date"]):
+                                if "date" not in col_map:
+                                    col_map["date"] = c_idx
+                            elif any(k in cn for k in ["narration", "particulars", "description", "remarks", "details", "transaction details", "transaction description"]):
+                                if "desc" not in col_map:
+                                    col_map["desc"] = c_idx
+                            elif any(k in cn for k in ["chq", "ref", "cheque", "utr", "tran id", "reference"]):
+                                if "ref" not in col_map:
+                                    col_map["ref"] = c_idx
+                            elif any(k in cn for k in ["withdrawal", "debit", "dr", "withdrawal amt"]):
+                                if "debit" not in col_map:
+                                    col_map["debit"] = c_idx
+                            elif any(k in cn for k in ["deposit", "credit", "cr", "deposit amt"]):
+                                if "credit" not in col_map:
+                                    col_map["credit"] = c_idx
+                            elif any(k in cn for k in ["amount", "txn amount", "net amount"]):
+                                if "amount" not in col_map:
+                                    col_map["amount"] = c_idx
+                            elif any(k in cn for k in ["type", "cr/dr", "dr/cr"]):
+                                if "type" not in col_map:
+                                    col_map["type"] = c_idx
+                            elif any(k in cn for k in ["balance", "closing"]):
+                                if "balance" not in col_map:
+                                    col_map["balance"] = c_idx
+                        continue  # Don't add header to data rows
+
+                # If it's a re-occurrence of header on next page, skip it
+                if header_found and any(k in joined_lower for k in ["date", "narration", "particulars"]):
+                    has_date2 = any(k in joined_lower for k in ["date", "txn date", "value date"])
+                    has_desc2 = any(k in joined_lower for k in ["narration", "particulars", "description"])
+                    if has_date2 and has_desc2:
+                        continue
+
+                if header_found:
+                    all_rows.append(clean_row)
+
+    if not header_found or "date" not in col_map:
+        return []
+
+    # Process all collected rows into transactions
+    transactions: list[dict[str, Any]] = []
+
+    date_c = col_map.get("date")
+    desc_c = col_map.get("desc")
+    debit_c = col_map.get("debit")
+    credit_c = col_map.get("credit")
+    amt_c = col_map.get("amount")
+    type_c = col_map.get("type")
+    balance_c = col_map.get("balance")
+
+    for row in all_rows:
+        raw_date = row[date_c] if date_c is not None and date_c < len(row) else ""
+        raw_desc = row[desc_c] if desc_c is not None and desc_c < len(row) else ""
+        raw_debit = row[debit_c] if debit_c is not None and debit_c < len(row) else ""
+        raw_credit = row[credit_c] if credit_c is not None and credit_c < len(row) else ""
+        raw_amt = row[amt_c] if amt_c is not None and amt_c < len(row) else ""
+        raw_type = row[type_c] if type_c is not None and type_c < len(row) else ""
+        raw_balance = row[balance_c] if balance_c is not None and balance_c < len(row) else ""
+
+        # Clean multi-line narrations (pdfplumber embeds \n)
+        raw_desc = re.sub(r"\s*\n\s*", " ", raw_desc).strip()
+
+        # Validate date
+        if not raw_date or not _is_valid_date(raw_date):
+            # Multi-line narration continuation: append to previous transaction
+            if raw_desc and transactions:
+                extra = re.sub(r"\s+", " ", raw_desc)
+                transactions[-1]["description"] = f"{transactions[-1]['description']} {extra}".strip()
+            continue
+
+        # Skip noise rows
+        if _is_noise_row(raw_desc):
+            continue
+
+        # Determine type and amount
+        txn_type, final_amount = _detect_type_from_columns(raw_debit, raw_credit, raw_balance, raw_desc)
+
+        # Fallback: single amount column with type column or narration hints
+        if final_amount == 0 and raw_amt:
+            final_amount = parse_clean_float(raw_amt)
+            if final_amount > 0:
+                lower_context = f"{raw_type} {raw_desc} {raw_balance}".lower()
+                if any(k in lower_context for k in ["cr", "credit", "deposit", "salary", "refund", "cashback"]):
+                    txn_type = "income"
+                else:
+                    txn_type = "expense"
+
+        # Fallback: BOB-style balance column with "Cr" suffix can help disambiguate
+        # but the primary signal is which column (debit/credit) has the value
+
+        if final_amount <= 0:
+            continue
+
+        # Clean description
+        clean_desc = re.sub(r"\s+", " ", raw_desc or "Bank Transaction").strip()
+
+        category = auto_categorize(clean_desc, txn_type)
+        std_date = standardize_date(raw_date)
+
+        transactions.append({
+            "date": std_date,
+            "description": clean_desc,
+            "amount": round(final_amount, 2),
+            "type": txn_type,
+            "category": category,
+        })
+
+    return transactions
+
+
 def parse_statement_with_pdfplumber(pdf_bytes: bytes) -> dict[str, Any]:
     """
     Primary extraction engine using pdfplumber:
-    1. Extracts structured tables across all pages
-    2. Identifies headers dynamically
+    1. Merges ALL table rows across pages (handles fragmented BOB-style tables)
+    2. Identifies column headers dynamically (works with ICICI, HDFC, BOB, SBI, etc.)
     3. Handles multi-line narrations
-    4. Falls back to layout-aware line parsing if bordered tables are not detected.
+    4. Falls back to layout-aware line parsing if no tables are detected.
     """
     transactions: list[dict[str, Any]] = []
     collected_text: list[str] = []
 
     with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
-        # First collect document text for metadata
-        for page in pdf.pages[:3]:  # First 3 pages contain all header metadata
+        # Collect document text for metadata
+        for page in pdf.pages[:3]:
             txt = page.extract_text() or ""
             if txt:
                 collected_text.append(txt)
 
-        # Strategy 1: Extract structured tables
-        for page in pdf.pages:
-            tables = page.extract_tables()
-            if not tables:
-                continue
-
-            for table in tables:
-                if not table or len(table) < 2:
-                    continue
-
-                # Header detection
-                header_idx = -1
-                col_map: dict[str, int] = {}
-
-                for r_idx, row in enumerate(table[:5]):
-                    clean_row = [str(c or "").strip().lower() for c in row]
-                    joined_row = " ".join(clean_row)
-
-                    # Look for date and narration/particulars columns
-                    has_date = any(k in joined_row for k in ["date", "txn date", "value date", "posting"])
-                    has_desc = any(k in joined_row for k in ["narration", "particulars", "description", "details", "remarks"])
-                    has_amt = any(k in joined_row for k in ["withdrawal", "deposit", "debit", "credit", "amount", "balance", "dr", "cr"])
-
-                    if has_date and (has_desc or has_amt):
-                        header_idx = r_idx
-                        # Map columns
-                        for c_idx, col_name in enumerate(clean_row):
-                            if not col_name:
-                                continue
-                            if any(k in col_name for k in ["txn date", "transaction date", "value date", "posting date", "date"]):
-                                if "date" not in col_map:
-                                    col_map["date"] = c_idx
-                            elif any(k in col_name for k in ["narration", "particulars", "description", "remarks", "details", "transaction details"]):
-                                if "desc" not in col_map:
-                                    col_map["desc"] = c_idx
-                            elif any(k in col_name for k in ["chq", "ref", "cheque", "utr", "tran id", "reference"]):
-                                if "ref" not in col_map:
-                                    col_map["ref"] = c_idx
-                            elif any(k in col_name for k in ["withdrawal", "debit", "dr", "withdrawal amt"]):
-                                if "debit" not in col_map:
-                                    col_map["debit"] = c_idx
-                            elif any(k in col_name for k in ["deposit", "credit", "cr", "deposit amt"]):
-                                if "credit" not in col_map:
-                                    col_map["credit"] = c_idx
-                            elif any(k in col_name for k in ["amount", "txn amount", "net amount"]):
-                                if "amount" not in col_map:
-                                    col_map["amount"] = c_idx
-                            elif any(k in col_name for k in ["type", "cr/dr", "dr/cr"]):
-                                if "type" not in col_map:
-                                    col_map["type"] = c_idx
-                            elif any(k in col_name for k in ["balance", "closing"]):
-                                if "balance" not in col_map:
-                                    col_map["balance"] = c_idx
-                        break
-
-                if header_idx == -1 or "date" not in col_map:
-                    continue
-
-                # Process transaction rows
-                date_c = col_map.get("date")
-                desc_c = col_map.get("desc")
-                debit_c = col_map.get("debit")
-                credit_c = col_map.get("credit")
-                amt_c = col_map.get("amount")
-                type_c = col_map.get("type")
-
-                for row in table[header_idx + 1:]:
-                    if not row:
-                        continue
-
-                    raw_date = str(row[date_c] or "").strip() if date_c is not None and date_c < len(row) else ""
-                    raw_desc = str(row[desc_c] or "").strip() if desc_c is not None and desc_c < len(row) else ""
-                    raw_debit = str(row[debit_c] or "").strip() if debit_c is not None and debit_c < len(row) else ""
-                    raw_credit = str(row[credit_c] or "").strip() if credit_c is not None and credit_c < len(row) else ""
-                    raw_amt = str(row[amt_c] or "").strip() if amt_c is not None and amt_c < len(row) else ""
-                    raw_type = str(row[type_c] or "").strip() if type_c is not None and type_c < len(row) else ""
-
-                    # Check for multi-line narration continuation
-                    is_valid_date = any(re.search(pat, raw_date) for pat, _ in DATE_PATTERNS)
-                    if not is_valid_date:
-                        if raw_desc and transactions:
-                            # Append extra description to previous transaction
-                            prev = transactions[-1]
-                            clean_extra = re.sub(r"\s+", " ", raw_desc)
-                            prev["description"] = f"{prev['description']} {clean_extra}".strip()
-                        continue
-
-                    # Parse transaction amount and type
-                    debit_val = parse_clean_float(raw_debit)
-                    credit_val = parse_clean_float(raw_credit)
-                    amt_val = parse_clean_float(raw_amt)
-
-                    txn_type = "expense"
-                    final_amount = 0.0
-
-                    if debit_val > 0:
-                        final_amount = debit_val
-                        txn_type = "expense"
-                    elif credit_val > 0:
-                        final_amount = credit_val
-                        txn_type = "income"
-                    elif amt_val > 0:
-                        final_amount = amt_val
-                        lower_row = " ".join(str(c or "") for c in row).lower()
-                        if any(k in lower_row for k in ["cr", "credit", "deposit"]) or "cr" in raw_type.lower():
-                            txn_type = "income"
-                        else:
-                            txn_type = "expense"
-
-                    if final_amount <= 0:
-                        continue
-
-                    clean_desc = re.sub(r"\s+", " ", raw_desc or "Bank Transaction").strip()
-                    lower_desc = clean_desc.lower()
-                    if any(k in lower_desc for k in ["opening balance", "closing balance", "closing available balance", "account holder details", "total debits count", "total credits count", "period:"]):
-                        continue
-
-                    category = auto_categorize(clean_desc, txn_type)
-                    std_date = standardize_date(raw_date)
-
-                    transactions.append({
-                        "date": std_date,
-                        "description": clean_desc,
-                        "amount": round(final_amount, 2),
-                        "type": txn_type,
-                        "category": category,
-                    })
+        # Strategy 1: Unified table extraction across all pages
+        # This handles both:
+        #   - Multi-row tables (ICICI, HDFC): header + N data rows in one table
+        #   - Fragmented tables (BOB): header in table N, then 1 data row per table
+        transactions = _merge_fragmented_tables(pdf)
 
         # Strategy 2: If table extraction didn't yield transactions, use layout text extraction
         if not transactions:
