@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../utils/api';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Wallet, Sparkles, FileText, CheckCircle2, Info, Lightbulb } from 'lucide-react';
 
 export default function Budget() {
@@ -74,7 +75,7 @@ export default function Budget() {
               </button>
             </div>
             <div className="markdown-content">
-              <ReactMarkdown>{result.raw_text}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.raw_text}</ReactMarkdown>
             </div>
           </div>
 

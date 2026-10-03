@@ -146,6 +146,18 @@ export default function Goals() {
           {goals.map((goal) => {
             const progress = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount) * 100 : 0;
             const isAchieved = progress >= 100;
+            const remainingAmount = Math.max(0, (goal.target_amount || 0) - (goal.current_amount || 0));
+            let monthlyNeeded = null;
+            if (goal.deadline && remainingAmount > 0) {
+              const deadlineDate = new Date(goal.deadline);
+              const now = new Date();
+              const monthsDiff = (deadlineDate.getFullYear() - now.getFullYear()) * 12 + (deadlineDate.getMonth() - now.getMonth());
+              if (monthsDiff > 0) {
+                monthlyNeeded = Math.ceil(remainingAmount / monthsDiff);
+              } else if (monthsDiff === 0) {
+                monthlyNeeded = remainingAmount;
+              }
+            }
 
             return (
               <div key={goal.id} className="card">
@@ -191,8 +203,13 @@ export default function Goals() {
                 </div>
 
                 {goal.deadline && (
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
-                    📅 Deadline: {new Date(goal.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
+                    <span>📅 Deadline: {new Date(goal.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    {monthlyNeeded !== null && !isAchieved && (
+                      <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>
+                        Req: {currency}{monthlyNeeded.toLocaleString()}/mo
+                      </span>
+                    )}
                   </div>
                 )}
 
