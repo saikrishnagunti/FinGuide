@@ -155,8 +155,12 @@ ${sortedCategories.slice(0, 6).map(c => `| **${c.category}** | ${formatCurrency(
   const insights = [
     `Net period cash flow is ${isSurplus ? 'positive' : 'negative'} at ${isSurplus ? '+' : ''}${formatCurrency(netSavings, currency)} (${savingsRate}% retention rate).`,
     `Largest single cost center is ${topCategory.category}, accounting for ${topCategory.percentage}% (${formatCurrency(topCategory.total, currency)}) of total expenditure.`,
-    isSurplus 
+    savingsRate >= 20
       ? `Operating margin of ${savingsRate}% provides healthy headroom for capital accumulation and debt repayment.`
+      : savingsRate >= 10
+      ? `Operating margin of ${savingsRate}% provides stable baseline cushion, though optimizing high-burn categories will accelerate savings.`
+      : savingsRate >= 0
+      ? `Operating margin of ${savingsRate}% is tight / cautious (<10%), leaving narrow headroom against unexpected expenses.`
       : `Expenditures exceeded collections by ${formatCurrency(Math.abs(netSavings), currency)}, requiring operational cost rationalization.`,
     `Cash flow stability status is rated as: ${solvencyStatus}.`,
   ];

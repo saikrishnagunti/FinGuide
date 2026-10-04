@@ -195,6 +195,42 @@ export async function initializeDatabase() {
     }
   }
 
+  // ── Auto-Migration for Category Refinement ──
+  try {
+    const { autoCategorize } = await import('./services/statement-parser.js');
+    const { syncSnapshotsFromTransactions } = await import('./routes/transactions.js');
+    const dbWrap = getDb();
+
+    // 1. Fix expenses categorized as 'Salary & Income' to 'Payroll & Salaries'
+    rawDb.run("UPDATE transactions SET category = 'Payroll & Salaries' WHERE type = 'expense' AND category = 'Salary & Income'");
+
+    // 2. Refine existing 'General' transactions if they match recognized categories
+    const stmt = rawDb.prepare("SELECT id, description, type, user_id FROM transactions WHERE category = 'General'");
+    const userIdsToSync = new Set();
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      if (row.description) {
+        const refinedCat = autoCategorize(row.description, null, row.type || 'expense');
+        if (refinedCat && refinedCat !== 'General') {
+          rawDb.run("UPDATE transactions SET category = ? WHERE id = ?", [refinedCat, row.id]);
+          if (row.user_id) userIdsToSync.add(row.user_id);
+        }
+      }
+    }
+    stmt.free();
+
+    // 3. Re-sync monthly snapshots for affected users
+    for (const uid of userIdsToSync) {
+      syncSnapshotsFromTransactions(dbWrap, uid);
+    }
+
+    if (userIdsToSync.size > 0) {
+      console.log(`[Database] Successfully refined transaction categories and synced snapshots for ${userIdsToSync.size} user(s).`);
+    }
+  } catch (migErr) {
+    console.warn('[Database] Category migration note:', migErr.message);
+  }
+
   saveDatabase();
   console.log('✅ Database initialized successfully');
   return getDb();

@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../database.js';
 import config from '../config.js';
 import { agentClient } from '../services/agent-client.js';
-import { parseStatementFile } from '../services/statement-parser.js';
+import { parseStatementFile, autoCategorize, parseCleanAmount } from '../services/statement-parser.js';
 
 const router = Router();
 
@@ -35,39 +35,6 @@ const upload = multer({
     }
   },
 });
-
-/**
- * Categorize transaction based on keywords in description.
- */
-function autoCategorize(description, rawCategory) {
-  if (rawCategory && rawCategory.trim() && rawCategory.toLowerCase() !== 'uncategorized') {
-    return rawCategory.trim();
-  }
-  const desc = (description || '').toLowerCase();
-
-  if (/salary|payroll|stipend|interest credit|dividend|neft credit|bonus/i.test(desc)) return 'Salary & Income';
-  if (/swiggy|zomato|starbucks|mcdonald|kfc|pizza|burger|cafe|restaurant|baking|dining|eat/i.test(desc)) return 'Food & Dining';
-  if (/blinkit|zepto|instamart|dmart|bigbasket|supermarket|grocery|groceries|spencer|fresh/i.test(desc)) return 'Groceries';
-  if (/uber|ola|rapido|metro|petrol|fuel|shell|bpcl|hpcl|toll|fastag|commute|cab/i.test(desc)) return 'Transportation';
-  if (/amazon|flipkart|myntra|ajio|zara|h&m|shopping|retail|store|mall|nykaa/i.test(desc)) return 'Shopping';
-  if (/netflix|spotify|prime|hotstar|youtube|movie|cinema|pvr|inox|entertainment|game|playstation/i.test(desc)) return 'Entertainment';
-  if (/rent|maintenance|society|housing|landlord|estate/i.test(desc)) return 'Housing';
-  if (/bescom|electricity|water|airtel|jio|vi|broadband|wifi|tataplay|dth|gas|cylinder|utility|utilities/i.test(desc)) return 'Utilities';
-  if (/pharmacy|hospital|clinic|apollo|1mg|practo|medplus|doctor|health|wellness/i.test(desc)) return 'Healthcare';
-  if (/insurance|lic|hdfc life|max life|star health|policy/i.test(desc)) return 'Insurance';
-  if (/sip|zerodha|groww|mutual fund|upstox|mf|investment|etmoney/i.test(desc)) return 'Investments';
-
-  return 'General';
-}
-
-/**
- * Clean and parse numeric amount strings.
- */
-function parseCleanAmount(val) {
-  if (val === undefined || val === null) return 0;
-  const str = String(val).replace(/[₹$€£,\s]/g, '').trim();
-  return parseFloat(str) || 0;
-}
 
 /**
  * Standardize dates into YYYY-MM-DD format.

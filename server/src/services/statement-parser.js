@@ -31,14 +31,25 @@ const AMOUNT_REGEX = /(?:^|\s)(?:Rs\.?|INR|₹|\$|€)?\s*([0-9]+(?:,[0-9]+)*\.[
 /**
  * Categorize transaction based on keywords in description.
  */
-export function autoCategorize(description, rawCategory) {
+export function autoCategorize(description, rawCategory, type = 'expense') {
   if (rawCategory && rawCategory.trim() && rawCategory.toLowerCase() !== 'uncategorized') {
-    return rawCategory.trim();
+    const trimmed = rawCategory.trim();
+    if (type === 'expense' && trimmed.toLowerCase() === 'salary & income') {
+      return 'Payroll & Salaries';
+    }
+    return trimmed;
   }
   const desc = (description || '').toLowerCase();
 
-  if (/salary|payroll|stipend|interest credit|dividend|neft credit|bonus/i.test(desc)) return 'Salary & Income';
-  if (/swiggy|zomato|starbucks|mcdonald|kfc|pizza|burger|cafe|restaurant|baking|dining|eat|domino|barbeque|paradise/i.test(desc)) return 'Food & Dining';
+  // Outflows with payroll or salary keywords represent payroll expenses
+  if (type === 'expense' && /salary|payroll|stipend|wages|staff/i.test(desc)) {
+    return 'Payroll & Salaries';
+  }
+
+  if (/salary|payroll|stipend|interest credit|dividend|neft credit|bonus/i.test(desc)) {
+    return type === 'expense' ? 'Payroll & Salaries' : 'Salary & Income';
+  }
+  if (/swiggy|zomato|starbucks|mcdonald|kfc|pizza|burger|cafe|restaurant|baking|dining|eat|domino|barbeque|paradise|biryani/i.test(desc)) return 'Food & Dining';
   if (/blinkit|zepto|instamart|dmart|bigbasket|supermarket|grocery|groceries|spencer|fresh|kirana|provision/i.test(desc)) return 'Groceries';
   if (/uber|ola|rapido|metro|petrol|fuel|shell|bpcl|hpcl|ioc|toll|fastag|commute|cab|irctc|railway|parking/i.test(desc)) return 'Transportation';
   if (/amazon|flipkart|myntra|ajio|zara|h&m|shopping|retail|store|mall|nykaa|croma|reliance.?digital/i.test(desc)) return 'Shopping';
@@ -50,6 +61,8 @@ export function autoCategorize(description, rawCategory) {
   if (/sip|zerodha|groww|mutual fund|upstox|mf|investment|etmoney|angelone|kuvera/i.test(desc)) return 'Investments';
   if (/emi|loan|tata capital|bajaj fin|equated monthly/i.test(desc)) return 'Loan & EMI';
   if (/gst|advance tax|income tax|itns|cbdt|tds|challan/i.test(desc)) return 'Taxes';
+
+  if (type === 'income') return 'Salary & Income';
 
   return 'General';
 }
@@ -540,7 +553,7 @@ export async function parsePdfNative(filePath, originalname = 'statement.pdf') {
       description: desc || 'Bank Transaction',
       amount: Math.round(finalAmount * 100) / 100,
       type,
-      category: autoCategorize(desc || 'Bank Transaction', type === 'income' ? 'Salary & Income' : null),
+      category: autoCategorize(desc || 'Bank Transaction', type === 'income' ? 'Salary & Income' : null, type),
     });
   }
 

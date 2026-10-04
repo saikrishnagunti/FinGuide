@@ -132,6 +132,8 @@ def auto_categorize(description: str, txn_type: str = "expense") -> str:
         return "Loan & EMI"
     if any(k in d for k in ["gst", "advance tax", "income tax", "itns", "cbdt", "tds"]):
         return "Taxes"
+    if any(k in d for k in ["salary", "payroll", "stipend", "wages", "staff"]):
+        return "Payroll & Salaries"
     if any(k in d for k in ["insurance", "lic", "premium", "tata aia", "max life", "star health"]):
         return "Insurance"
 
