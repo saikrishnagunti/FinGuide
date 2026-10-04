@@ -4,6 +4,9 @@ import { mkdirSync } from 'fs';
 import config from '../config.js';
 import { agentClient } from '../services/agent-client.js';
 import { parseStatementFile } from '../services/statement-parser.js';
+import { generateFallbackAudit } from '../services/audit-fallback.js';
+import { runGeminiAdvisor } from '../services/gemini-advisor.js';
+import { runFallbackReactAdvisor } from '../services/react-fallback.js';
 
 const router = Router();
 
@@ -69,8 +72,6 @@ router.post('/parse', (req, res) => {
     }
   });
 });
-
-import { generateFallbackAudit } from '../services/audit-fallback.js';
 
 /**
  * POST /api/guest/analyze
@@ -144,6 +145,131 @@ router.post('/analyze', async (req, res) => {
   } catch (err) {
     console.error('Guest analyze fatal error:', err);
     res.status(500).json({ error: err.message || 'Analysis failed' });
+  }
+});
+
+/**
+ * POST /api/guest/chat
+ * Interactive AI financial advisor for guest session (in-memory, no auth, no DB writes).
+ * Accepts user's question, conversation history, and financial telemetry from current session.
+ */
+router.post('/chat', async (req, res) => {
+  try {
+    const { message, conversation_history, financial_data } = req.body;
+
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const income_data = financial_data?.income_data || {};
+    const expense_data = financial_data?.expense_data || {};
+    const transactions = Array.isArray(financial_data?.transactions) ? financial_data.transactions : [];
+    const auditSummary = financial_data?.audit_summary || '';
+
+    const hasIEData = Object.keys(income_data).length > 0 || Object.keys(expense_data).length > 0;
+    const hasTransactions = transactions.length > 0;
+
+    let snapshots = [];
+    if (hasIEData) {
+      const totalIncome = Object.values(income_data).reduce((s, v) => s + (Number(v) || 0), 0);
+      const totalExpenses = Object.values(expense_data).reduce((s, v) => s + (Number(v) || 0), 0);
+      snapshots.push({
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        income_data,
+        expense_data,
+        total_income: Math.round(totalIncome * 100) / 100,
+        total_expenses: Math.round(totalExpenses * 100) / 100,
+        net_savings: Math.round((totalIncome - totalExpenses) * 100) / 100,
+      });
+    } else if (hasTransactions) {
+      const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + (Number(t.amount) || 0), 0);
+      const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + (Number(t.amount) || 0), 0);
+      const derivedExpenses = {};
+      for (const t of transactions) {
+        if (t.type === 'expense') {
+          const cat = t.category || 'General';
+          derivedExpenses[cat] = (derivedExpenses[cat] || 0) + (Number(t.amount) || 0);
+        }
+      }
+      snapshots.push({
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        income_data: { 'Statement Inflow': totalIncome },
+        expense_data: derivedExpenses,
+        total_income: Math.round(totalIncome * 100) / 100,
+        total_expenses: Math.round(totalExpenses * 100) / 100,
+        net_savings: Math.round((totalIncome - totalExpenses) * 100) / 100,
+      });
+    }
+
+    const guestUser = {
+      name: 'Guest Explorer',
+      currency: '₹',
+      is_logged_in: false,
+    };
+
+    // 1. Primary: Direct Gemini AI Advisor
+    try {
+      const geminiResult = await runGeminiAdvisor({
+        message,
+        user: guestUser,
+        snapshots,
+        transactions,
+        goals: [],
+        conversation_history: conversation_history || [],
+        auditSummary,
+      });
+      return res.json({
+        guest_mode: true,
+        ...geminiResult,
+        reply: geminiResult.raw_text,
+        response: geminiResult.raw_text,
+      });
+    } catch (geminiErr) {
+      console.warn('[GuestChat] Gemini advisor unavailable:', geminiErr.message, '— checking Python agent microservice.');
+    }
+
+    // 2. Secondary: Python Agent Microservice
+    try {
+      const agentResult = await agentClient.chat({
+        user_context: guestUser,
+        message,
+        conversation_history: conversation_history || [],
+        financial_data: {
+          snapshots,
+          transactions,
+          goals: [],
+        },
+      });
+      return res.json({
+        guest_mode: true,
+        ...agentResult,
+        reply: agentResult.raw_text || agentResult.summary,
+        response: agentResult.raw_text || agentResult.summary,
+      });
+    } catch (agentErr) {
+      console.warn('[GuestChat] Python agent unavailable:', agentErr.message, '— executing resilient offline advisor.');
+    }
+
+    // 3. Fallback: Offline resilient advisor
+    const fallbackResult = runFallbackReactAdvisor({
+      message,
+      user: guestUser,
+      snapshots,
+      transactions,
+      goals: [],
+    });
+
+    return res.json({
+      guest_mode: true,
+      ...fallbackResult,
+      reply: fallbackResult.raw_text,
+      response: fallbackResult.raw_text,
+    });
+  } catch (err) {
+    console.error('Guest chat fatal error:', err);
+    res.status(500).json({ error: err.message || 'Chat service failed' });
   }
 });
 

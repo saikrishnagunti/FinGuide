@@ -322,6 +322,14 @@ class ApiClient {
     return this.upload('/guest/parse', file);
   }
 
+  guestChat(message, conversationHistory = [], financialData = {}) {
+    return this.request('POST', '/guest/chat', {
+      message,
+      conversation_history: conversationHistory,
+      financial_data: financialData,
+    });
+  }
+
   // ── Health ──
   healthCheck() {
     return this.request('GET', '/health');

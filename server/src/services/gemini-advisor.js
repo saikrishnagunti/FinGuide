@@ -12,6 +12,7 @@ export async function runGeminiAdvisor({
   transactions = [],
   goals = [],
   conversation_history = [],
+  auditSummary = '',
 }) {
   const apiKey = config.geminiApiKey;
   if (!apiKey) {
@@ -114,7 +115,7 @@ ${topCatsText || '- None recorded'}
 - Active Goals:
 ${goalsText}
 - Recent Account Activity:
-${recentTxnsText || '- None recorded'}`;
+${recentTxnsText || '- None recorded'}${auditSummary ? `\n- Audited Financial Diagnostics & Key Directives:\n${auditSummary.slice(0, 1500)}` : ''}${user?.is_logged_in === false ? '\n- Session Note: Guest Explorer Mode (Single-session, in-memory). Ground your responses in their verified session numbers.' : ''}`;
 
   // 3. Assemble Conversation History and Clean Alternating Turns
   const cleanTurns = [];

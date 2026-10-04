@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -24,6 +24,9 @@ import {
   Layers,
   ChevronRight,
   Info,
+  Send,
+  Bot,
+  MessageSquare,
 } from 'lucide-react';
 
 const auditMarkdownComponents = {
@@ -134,6 +137,29 @@ export default function Guest() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [analysisError, setAnalysisError] = useState('');
 
+  // Guest Advisor Chat State
+  const [advisorMessages, setAdvisorMessages] = useState([]);
+  const [advisorInput, setAdvisorInput] = useState('');
+  const [advisorLoading, setAdvisorLoading] = useState(false);
+  const [advisorError, setAdvisorError] = useState('');
+  const advisorEndRef = useRef(null);
+  const guestAdvisorInputRef = useRef(null);
+
+  const guestQuickPrompts = [
+    '💡 How can I cut spending in my highest category?',
+    '📊 Propose a realistic 50/30/20 monthly budget',
+    '🛡️ How much emergency fund should I set aside?',
+    '📈 Where should I allocate my monthly cash surplus?',
+    '⚠️ Are there any hidden cash leaks in my transactions?',
+  ];
+
+  // Auto-scroll advisor messages on update
+  useEffect(() => {
+    if (analysisResult && advisorMessages.length > 1) {
+      advisorEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [advisorMessages, advisorLoading, analysisResult]);
+
   // Calculations for I&E Form
   const calcFormTotalIncome = () =>
     Object.values(incomeData).reduce((sum, v) => sum + (parseFloat(v) || 0), 0);
@@ -179,6 +205,9 @@ export default function Guest() {
       'Debt / Loans': '',
       Miscellaneous: '',
     });
+    setAdvisorMessages([]);
+    setAdvisorInput('');
+    setAdvisorError('');
   };
 
   // Handlers for Statement Upload
@@ -212,7 +241,68 @@ export default function Guest() {
     setParsedStatement(null);
     setStatementTransactions([]);
     setUploadError('');
+    setAdvisorMessages([]);
+    setAdvisorInput('');
+    setAdvisorError('');
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Send message to Guest AI Advisor
+  const handleSendGuestAdvisor = async (promptText) => {
+    const text = (promptText || advisorInput).trim();
+    if (!text || advisorLoading) return;
+
+    const userMsg = { role: 'user', content: text };
+    const updatedMessages = [...advisorMessages, userMsg];
+    setAdvisorMessages(updatedMessages);
+    setAdvisorInput('');
+    setAdvisorLoading(true);
+    setAdvisorError('');
+
+    try {
+      const cleanIncome = {};
+      Object.entries(incomeData).forEach(([k, v]) => {
+        const num = parseFloat(v);
+        if (num > 0) cleanIncome[k] = num;
+      });
+
+      const cleanExpenses = {};
+      Object.entries(expenseData).forEach(([k, v]) => {
+        const num = parseFloat(v);
+        if (num > 0) cleanExpenses[k] = num;
+      });
+
+      const history = updatedMessages
+        .slice(-10)
+        .map(m => ({ role: m.role, content: m.content }));
+
+      const res = await api.guestChat(text, history, {
+        income_data: cleanIncome,
+        expense_data: cleanExpenses,
+        transactions: statementTransactions,
+        audit_summary: analysisResult?.raw_text || analysisResult?.summary || '',
+      });
+
+      setAdvisorMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: res.reply || res.raw_text || res.response || 'I evaluated your session figures, but could not formulate a response. Please try rephrasing.',
+        },
+      ]);
+    } catch (err) {
+      console.error('Guest advisor error:', err);
+      setAdvisorError(err.message || 'Unable to connect to AI Advisor.');
+      setAdvisorMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: `⚠️ ${err.message || 'Failed to reach the advisor service. Please verify server connectivity.'}`,
+        },
+      ]);
+    } finally {
+      setAdvisorLoading(false);
+    }
   };
 
   // Run Guest Analysis
@@ -251,6 +341,21 @@ export default function Guest() {
       );
 
       setAnalysisResult(res);
+
+      // Initialize guest advisor welcome message with audit telemetry
+      const quick = res?.sections?.find(s => s.title === 'Quick Stats')?.data || {};
+      const inc = Number(quick.total_income ?? formIncome ?? 0);
+      const exp = Number(quick.total_expenses ?? formExpenses ?? 0);
+      const net = Number(quick.net_savings ?? (inc - exp));
+      const rate = Number(quick.savings_rate ?? (inc > 0 ? ((net / inc) * 100).toFixed(1) : 0));
+      const topCat = quick.top_categories?.[0]?.category;
+
+      setAdvisorMessages([
+        {
+          role: 'assistant',
+          content: `Hi! 👋 I'm **FinGuide AI**, your companion financial advisor for this session.\n\nI have reviewed your Financial Audit: your verified monthly inflow is **₹${inc.toLocaleString()}** and outflows are **₹${exp.toLocaleString()}**, resulting in an operating cash flow of **₹${net.toLocaleString()}** (${rate}% savings rate)${topCat ? `. Your largest expenditure center is **${topCat}**` : ''}.\n\nAsk me anything below about this audit — such as how to cut your top categories, benchmark against the 50/30/20 rule, or plan for a big purchase!`,
+        },
+      ]);
 
       // Smooth scroll to results
       setTimeout(() => {
@@ -670,6 +775,18 @@ export default function Guest() {
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    document.getElementById('guest-advisor-section')?.scrollIntoView({ behavior: 'smooth' });
+                    setTimeout(() => guestAdvisorInputRef.current?.focus(), 250);
+                  }}
+                  title="Ask FinGuide AI Advisor about this audit"
+                >
+                  <MessageSquare size={15} style={{ marginRight: '6px' }} />
+                  Ask Advisor
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
                   onClick={() => window.print()}
                 >
                   <Printer size={15} style={{ marginRight: '6px' }} />
@@ -808,7 +925,132 @@ export default function Guest() {
                 </div>
               </section>
 
-              {/* 4. Strategic Account Invitation CTA */}
+              {/* 4. Interactive Ask FinGuide AI Advisor */}
+              <section id="guest-advisor-section" className="audit-section guest-advisor-section no-print">
+                <div className="audit-section-heading">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Bot size={20} style={{ color: 'var(--accent-primary)' }} />
+                    <h3>4. Ask FinGuide Advisor About This Audit</h3>
+                  </div>
+                  <span className="section-pill" style={{ background: 'rgba(99, 102, 241, 0.15)', color: 'var(--accent-primary)' }}>
+                    Live AI Companion
+                  </span>
+                </div>
+
+                <div className="guest-advisor-card">
+                  <p className="guest-advisor-subtitle">
+                    Have questions about your audited cash surplus of ₹{Number(netSavingsVal || 0).toLocaleString()}, optimizing your spending categories, or planning next steps? Ask FinGuide anything below.
+                  </p>
+
+                  {/* Suggested Question Chips */}
+                  <div className="guest-advisor-chips-row">
+                    <span className="chips-label">💡 Suggested Questions:</span>
+                    <div className="guest-advisor-chips">
+                      {guestQuickPrompts.map((p, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="advisor-chip"
+                          disabled={advisorLoading}
+                          onClick={() => handleSendGuestAdvisor(p)}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Chat Conversation Thread */}
+                  <div className="guest-advisor-messages-box">
+                    {advisorMessages.map((msg, idx) => (
+                      <div key={idx} className={`chat-message ${msg.role}`}>
+                        <div className="chat-avatar">
+                          {msg.role === 'assistant' ? <Bot size={16} /> : 'G'}
+                        </div>
+                        <div className="chat-content">
+                          <div className="markdown-content">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {msg.content}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {advisorLoading && (
+                      <div className="chat-message assistant">
+                        <div className="chat-avatar"><Bot size={16} /></div>
+                        <div className="chat-content">
+                          <div className="chat-typing">
+                            <span /><span /><span />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={advisorEndRef} />
+                  </div>
+
+                  {advisorError && (
+                    <div className="alert alert-danger" style={{ margin: '8px 16px', fontSize: '13px' }}>
+                      <AlertCircle size={15} />
+                      <span>{advisorError}</span>
+                    </div>
+                  )}
+
+                  {/* Chat Input Bar */}
+                  <form
+                    className="guest-advisor-input-form"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSendGuestAdvisor();
+                    }}
+                  >
+                    <input
+                      ref={guestAdvisorInputRef}
+                      type="text"
+                      className="form-control"
+                      placeholder="Ask your advisor a question about this audit (e.g. Can I afford a ₹50,000 trip?)..."
+                      value={advisorInput}
+                      onChange={(e) => setAdvisorInput(e.target.value)}
+                      disabled={advisorLoading}
+                    />
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={advisorLoading || !advisorInput.trim()}
+                      title="Send message to advisor"
+                    >
+                      {advisorLoading ? (
+                        <div className="spinner-sm" style={{ width: '16px', height: '16px' }} />
+                      ) : (
+                        <Send size={16} />
+                      )}
+                      <span>Ask Advisor</span>
+                    </button>
+                  </form>
+
+                  {/* Footer Bar */}
+                  <div className="guest-advisor-bottom-bar">
+                    <span className="guest-advisor-privacy-hint">
+                      🔒 100% In-Memory Session • Private & Temporary
+                    </span>
+                    {advisorMessages.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-xs text-muted"
+                        onClick={() => {
+                          setAdvisorMessages([advisorMessages[0]]);
+                        }}
+                      >
+                        <Trash2 size={12} style={{ marginRight: '4px' }} />
+                        Reset Chat
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              {/* 5. Strategic Account Invitation CTA */}
               <div className="guest-account-invite-card no-print">
                 <div className="invite-content">
                   <div className="invite-badge">
@@ -839,6 +1081,9 @@ export default function Guest() {
                       className="btn btn-ghost btn-lg"
                       onClick={() => {
                         setAnalysisResult(null);
+                        setAdvisorMessages([]);
+                        setAdvisorInput('');
+                        setAdvisorError('');
                         handleClearForm();
                         handleClearStatement();
                         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -871,6 +1116,26 @@ export default function Guest() {
           </section>
         )}
       </main>
+
+      {/* ── Floating Advisor Jump Button for Guest Mode ── */}
+      {analysisResult && (
+        <button
+          type="button"
+          className="advisor-fab no-print"
+          onClick={() => {
+            document.getElementById('guest-advisor-section')?.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => guestAdvisorInputRef.current?.focus(), 250);
+          }}
+          title="Ask FinGuide Advisor About This Audit"
+          aria-label="Ask FinGuide Advisor"
+        >
+          <div className="advisor-fab-icon">
+            <Sparkles size={18} />
+          </div>
+          <span className="advisor-fab-text">Ask Advisor</span>
+          <span className="advisor-fab-pulse" />
+        </button>
+      )}
     </div>
   );
 }
