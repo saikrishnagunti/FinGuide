@@ -855,7 +855,7 @@ export default function Dashboard() {
               <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: 300 }}>
                 <ResponsiveContainer width="100%" height={300}>
                   {chartView === 'area' ? (
-                    <AreaChart data={displayChartData} margin={{ top: 12, right: 16, left: -10, bottom: 4 }}>
+                    <AreaChart key={`area-${forecastModel}-${forecastHorizon}-${timeRange}`} data={displayChartData} margin={{ top: 12, right: 16, left: -10, bottom: 4 }}>
                       <defs>
                         <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#178582" stopOpacity={0.35} />
@@ -950,7 +950,7 @@ export default function Dashboard() {
                       )}
                     </AreaChart>
                   ) : chartView === 'bar' ? (
-                    <BarChart data={displayChartData} margin={{ top: 12, right: 16, left: -10, bottom: 4 }}>
+                    <BarChart key={`bar-${forecastModel}-${forecastHorizon}-${timeRange}`} data={displayChartData} margin={{ top: 12, right: 16, left: -10, bottom: 4 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(233,241,250,0.08)" : "rgba(10,24,40,0.08)"} />
                       <XAxis
                         dataKey="name"
@@ -1005,7 +1005,7 @@ export default function Dashboard() {
                       )}
                     </BarChart>
                   ) : (
-                    <AreaChart data={displayChartData} margin={{ top: 12, right: 16, left: -10, bottom: 4 }}>
+                    <AreaChart key={`net-${forecastModel}-${forecastHorizon}-${timeRange}`} data={displayChartData} margin={{ top: 12, right: 16, left: -10, bottom: 4 }}>
                       <defs>
                         <linearGradient id="netGrad" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor={isDark ? "#BFA181" : "#00ABE4"} stopOpacity={0.35} />
