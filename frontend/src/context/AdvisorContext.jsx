@@ -18,6 +18,19 @@ export function AdvisorProvider({ children }) {
   ]);
   const [openThoughts, setOpenThoughts] = useState({});
   const [actionStatuses, setActionStatuses] = useState({});
+  const [chatSummary, setChatSummary] = useState('');
+
+  const clearConversation = useCallback(() => {
+    setMessages([
+      {
+        role: 'assistant',
+        content: `Hi ${user?.name || 'there'}! 👋 I'm **FinGuide**, your personal financial advisor.\n\nI can analyze your spending, calculate realistic savings targets, and propose smart budgets and financial goals with your approval.\n\nAsk me anything or say *"Help me plan my budget"*!`,
+      },
+    ]);
+    setOpenThoughts({});
+    setActionStatuses({});
+    setChatSummary('');
+  }, [user]);
 
   const openAdvisor = useCallback((initialPrompt = null) => {
     if (initialPrompt) {
@@ -55,6 +68,9 @@ export function AdvisorProvider({ children }) {
         setOpenThoughts,
         actionStatuses,
         setActionStatuses,
+        chatSummary,
+        setChatSummary,
+        clearConversation,
       }}
     >
       {children}

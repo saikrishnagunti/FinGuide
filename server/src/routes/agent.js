@@ -84,7 +84,7 @@ router.post('/analyze', async (req, res) => {
  */
 router.post('/chat', async (req, res) => {
   try {
-    const { message, conversation_history } = req.body;
+    const { message, conversation_history, chat_summary } = req.body;
     const userId = req.user.id;
 
     if (!message) {
@@ -124,6 +124,7 @@ router.post('/chat', async (req, res) => {
         transactions,
         goals,
         conversation_history: conversation_history || [],
+        chatSummary: chat_summary,
       });
       return res.json({
         ...geminiResult,
@@ -179,7 +180,7 @@ router.post('/chat', async (req, res) => {
  */
 router.post('/react', async (req, res) => {
   try {
-    const { message, conversation_history } = req.body;
+    const { message, conversation_history, chat_summary } = req.body;
     const userId = req.user.id;
 
     const user = db.prepare('SELECT id, name, currency FROM users WHERE id = ?').get(userId);
@@ -214,6 +215,7 @@ router.post('/react', async (req, res) => {
         transactions,
         goals,
         conversation_history: conversation_history || [],
+        chatSummary: chat_summary,
       });
       return res.json({
         ...geminiResult,

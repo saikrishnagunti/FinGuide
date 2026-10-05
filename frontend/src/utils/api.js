@@ -273,17 +273,19 @@ class ApiClient {
     return this.request('POST', '/agent/analyze', data);
   }
 
-  chat(message, conversationHistory = []) {
+  chat(message, conversationHistory = [], chatSummary = '') {
     return this.request('POST', '/agent/chat', {
       message,
       conversation_history: conversationHistory,
+      chat_summary: chatSummary,
     });
   }
 
-  reactChat(message, conversationHistory = []) {
+  reactChat(message, conversationHistory = [], chatSummary = '') {
     return this.request('POST', '/agent/react', {
       message,
       conversation_history: conversationHistory,
+      chat_summary: chatSummary,
     });
   }
 
@@ -322,11 +324,12 @@ class ApiClient {
     return this.upload('/guest/parse', file);
   }
 
-  guestChat(message, conversationHistory = [], financialData = {}) {
+  guestChat(message, conversationHistory = [], financialData = {}, chatSummary = '') {
     return this.request('POST', '/guest/chat', {
       message,
       conversation_history: conversationHistory,
       financial_data: financialData,
+      chat_summary: chatSummary,
     });
   }
 

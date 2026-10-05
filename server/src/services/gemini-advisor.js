@@ -13,6 +13,7 @@ export async function runGeminiAdvisor({
   goals = [],
   conversation_history = [],
   auditSummary = '',
+  chatSummary = '',
 }) {
   const apiKey = config.geminiApiKey;
   if (!apiKey) {
@@ -115,7 +116,8 @@ ${topCatsText || '- None recorded'}
 - Active Goals:
 ${goalsText}
 - Recent Account Activity:
-${recentTxnsText || '- None recorded'}${auditSummary ? `\n- Audited Financial Diagnostics & Key Directives:\n${auditSummary.slice(0, 1500)}` : ''}${user?.is_logged_in === false ? '\n- Session Note: Guest Explorer Mode (Single-session, in-memory). Ground your responses in their verified session numbers.' : ''}`;
+${recentTxnsText || '- None recorded'}${auditSummary ? `\n- Audited Financial Diagnostics & Key Directives:\n${auditSummary.slice(0, 1500)}` : ''}${user?.is_logged_in === false ? '\n- Session Note: Guest Explorer Mode (Single-session, in-memory). Ground your responses in their verified session numbers.' : ''}
+${chatSummary ? `\nPREVIOUS CONVERSATION SUMMARY:\n${chatSummary}\n` : ''}`;
 
   // 3. Assemble Conversation History and Clean Alternating Turns
   const cleanTurns = [];
@@ -167,6 +169,24 @@ ${recentTxnsText || '- None recorded'}${auditSummary ? `\n- Audited Financial Di
 
   if (cleanTurns.length === 0 && currentMsg) {
     cleanTurns.push({ role: 'user', parts: [{ text: currentMsg }] });
+  }
+
+  // 3.5 Sliding Window Memory Optimization: Summarize older chunk if history is large
+  let summaryPromise = Promise.resolve(chatSummary);
+  if (Array.isArray(conversation_history) && conversation_history.length > 12) {
+    const olderMessages = conversation_history.slice(0, -10).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+    const summarizePrompt = `Please concisely summarize the key financial constraints, goals, and facts discussed in this previous conversation chunk. Integrate it with any existing summary.\n\nExisting summary:\n${chatSummary || 'None'}\n\nOlder messages to summarize:\n${olderMessages}`;
+    
+    summaryPromise = fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: summarizePrompt }] }]
+      }),
+    })
+    .then(r => r.json())
+    .then(data => data?.candidates?.[0]?.content?.parts?.[0]?.text || chatSummary)
+    .catch(() => chatSummary);
   }
 
   // 4. Query Gemini API with Fallback Models
@@ -253,6 +273,8 @@ ${recentTxnsText || '- None recorded'}${auditSummary ? `\n- Audited Financial Di
     hitlAction ? `Action Formulation: Prepared Human-in-the-Loop milestone proposal for user review.` : `Strategic Formulation: Generated customized fiduciary guidance and savings milestones.`,
   ];
 
+  const finalSummary = await summaryPromise;
+
   return {
     raw_text: cleanText,
     final_answer: cleanText,
@@ -261,5 +283,6 @@ ${recentTxnsText || '- None recorded'}${auditSummary ? `\n- Audited Financial Di
     status: 'completed',
     source: 'gemini_advisor',
     model: modelUsed,
+    new_summary: finalSummary,
   };
 }

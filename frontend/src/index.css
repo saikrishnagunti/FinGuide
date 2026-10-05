@@ -1593,8 +1593,13 @@ tr:hover td {
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
-.chat-input-area input {
+.chat-input-area input,
+.chat-input-area textarea {
   flex: 1;
+  resize: none;
+  min-height: 42px;
+  max-height: 120px;
+  font-family: inherit;
 }
 
 @keyframes messageIn {

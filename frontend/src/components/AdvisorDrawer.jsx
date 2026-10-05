@@ -20,13 +20,14 @@ import {
   ShieldAlert,
   Sun,
   Moon,
+  Trash2,
 } from 'lucide-react';
 
 export default function AdvisorDrawer() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isOpen, closeAdvisor, toggleAdvisor, queuedPrompt, consumeQueuedPrompt, messages, setMessages, openThoughts, setOpenThoughts, actionStatuses, setActionStatuses } = useAdvisor();
+  const { isOpen, closeAdvisor, toggleAdvisor, queuedPrompt, consumeQueuedPrompt, messages, setMessages, openThoughts, setOpenThoughts, actionStatuses, setActionStatuses, chatSummary, setChatSummary, clearConversation } = useAdvisor();
   const { theme, toggleTheme } = useTheme();
 
   const [useReactMode, setUseReactMode] = useState(true);
@@ -105,14 +106,17 @@ export default function AdvisorDrawer() {
     try {
       const history = messages
         .filter(m => m.role !== 'system')
-        .slice(-12)
         .map(m => ({ role: m.role, content: m.content }));
 
       let responseData;
       if (useReactMode) {
-        responseData = await api.reactChat(text, history);
+        responseData = await api.reactChat(text, history, chatSummary);
       } else {
-        responseData = await api.chat(text, history);
+        responseData = await api.chat(text, history, chatSummary);
+      }
+
+      if (responseData.new_summary) {
+        setChatSummary(responseData.new_summary);
       }
 
       setMessages(prev => [
@@ -134,6 +138,13 @@ export default function AdvisorDrawer() {
       ]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendPrompt(input);
     }
   };
 
@@ -194,6 +205,15 @@ export default function AdvisorDrawer() {
           </div>
 
           <div className="advisor-drawer-actions">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={clearConversation}
+              title="Clear Conversation"
+              aria-label="Clear Conversation"
+            >
+              <Trash2 size={16} />
+            </button>
             <button
               type="button"
               className="btn btn-ghost btn-sm"
@@ -364,14 +384,15 @@ export default function AdvisorDrawer() {
 
         {/* Input Footer */}
         <form onSubmit={handleSubmit} className="advisor-drawer-footer">
-          <input
+          <textarea
             ref={inputRef}
-            type="text"
             className="form-input"
             placeholder="Ask FinGuide anything about your finances..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
             disabled={loading}
+            rows={1}
           />
           <button
             type="submit"

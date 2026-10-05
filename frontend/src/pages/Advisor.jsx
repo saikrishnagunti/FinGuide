@@ -3,13 +3,13 @@ import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Send, Bot, Sparkles, CheckCircle2, XCircle, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
+import { Send, Bot, Sparkles, CheckCircle2, XCircle, ChevronDown, ChevronUp, ShieldAlert, Trash2 } from 'lucide-react';
 import { useAdvisor } from '../context/AdvisorContext';
 
 export default function Advisor() {
   const { user } = useAuth();
   const [useReactMode, setUseReactMode] = useState(true);
-  const { messages, setMessages, openThoughts, setOpenThoughts, actionStatuses, setActionStatuses } = useAdvisor();
+  const { messages, setMessages, openThoughts, setOpenThoughts, actionStatuses, setActionStatuses, chatSummary, setChatSummary, clearConversation } = useAdvisor();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -51,6 +51,13 @@ export default function Advisor() {
     ]);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   const sendMessage = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -64,14 +71,17 @@ export default function Advisor() {
     try {
       const history = messages
         .filter(m => m.role !== 'system')
-        .slice(-12)
         .map(m => ({ role: m.role, content: m.content }));
 
       let responseData;
       if (useReactMode) {
-        responseData = await api.reactChat(text, history);
+        responseData = await api.reactChat(text, history, chatSummary);
       } else {
-        responseData = await api.chat(text, history);
+        responseData = await api.chat(text, history, chatSummary);
+      }
+
+      if (responseData.new_summary) {
+        setChatSummary(responseData.new_summary);
       }
 
       setMessages(prev => [
@@ -126,6 +136,15 @@ export default function Advisor() {
             onClick={() => setUseReactMode(!useReactMode)}
           >
             {useReactMode ? 'Actions & Approvals' : 'Advice Only'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={clearConversation}
+            title="Clear Conversation"
+            style={{ padding: '2px 8px', height: '26px' }}
+          >
+            <Trash2 size={14} /> Clear
           </button>
         </div>
       </div>
@@ -267,14 +286,14 @@ export default function Advisor() {
         )}
 
         <div className="chat-input-area">
-          <input
-            type="text"
+          <textarea
             className="form-input"
             placeholder={useReactMode ? "Ask FinGuide about budgets, savings, or spending..." : "Ask about your finances..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyDown={handleKeyDown}
             disabled={loading}
+            rows={1}
           />
           <button
             className="btn btn-primary"
