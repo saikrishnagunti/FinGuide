@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { api } from '../utils/api';
 import BrandLogo from '../components/BrandLogo';
+import { useTheme } from '../context/ThemeContext';
 import {
   Sparkles,
   Upload,
@@ -27,6 +28,8 @@ import {
   Send,
   Bot,
   MessageSquare,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 const auditMarkdownComponents = {
@@ -100,6 +103,7 @@ const SAMPLE_EXPENSES = {
 export default function Guest() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const { theme, toggleTheme } = useTheme();
 
   // Active input mode: 'form', 'upload', or 'both'
   const [activeTab, setActiveTab] = useState('form');
@@ -388,6 +392,25 @@ export default function Guest() {
             <span className="badge badge-primary">Guest Session</span>
           </div>
           <div className="guest-header-actions">
+            <button
+              type="button"
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+              title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun size={15} className="theme-icon sun" />
+                  <span className="theme-label">Light</span>
+                </>
+              ) : (
+                <>
+                  <Moon size={15} className="theme-icon moon" />
+                  <span className="theme-label">Dark</span>
+                </>
+              )}
+            </button>
             <Link to="/login" className="btn btn-ghost btn-sm">Log In</Link>
             <Link to="/register" className="btn btn-primary btn-sm">
               <UserPlus size={15} style={{ marginRight: '6px' }} />

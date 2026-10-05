@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAdvisor } from '../context/AdvisorContext';
+import { useTheme } from '../context/ThemeContext';
 import { api } from '../utils/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -17,6 +18,8 @@ import {
   Maximize2,
   MessageSquare,
   ShieldAlert,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 export default function AdvisorDrawer() {
@@ -24,6 +27,7 @@ export default function AdvisorDrawer() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isOpen, closeAdvisor, toggleAdvisor, queuedPrompt, consumeQueuedPrompt } = useAdvisor();
+  const { theme, toggleTheme } = useTheme();
 
   const [useReactMode, setUseReactMode] = useState(true);
   const [messages, setMessages] = useState([
@@ -201,6 +205,15 @@ export default function AdvisorDrawer() {
             <button
               type="button"
               className="btn btn-ghost btn-sm"
+              onClick={toggleTheme}
+              title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+              aria-label="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
               onClick={() => {
                 closeAdvisor();
                 navigate('/advisor');
@@ -230,7 +243,7 @@ export default function AdvisorDrawer() {
             />
             <span className="advisor-toggle-slider" />
             <span className="advisor-toggle-text">
-              <Sparkles size={12} style={{ color: useReactMode ? '#a5b4fc' : '#94a3b8' }} />
+              <Sparkles size={12} style={{ color: useReactMode ? 'var(--accent-primary)' : 'var(--text-muted)' }} />
               Smart Planning Actions {useReactMode ? 'Active' : 'Off'}
             </span>
           </label>
@@ -252,7 +265,7 @@ export default function AdvisorDrawer() {
                       className="thought-toggle"
                       onClick={() => toggleThought(i)}
                     >
-                      <Sparkles size={13} style={{ color: '#818cf8' }} />
+                      <Sparkles size={13} style={{ color: 'var(--accent-primary)' }} />
                       <span>Calculation & Analysis Steps ({msg.thoughtSteps.length})</span>
                       {openThoughts[i] ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                     </button>

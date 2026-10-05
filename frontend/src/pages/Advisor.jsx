@@ -140,119 +140,112 @@ export default function Advisor() {
         <div className="chat-messages">
           {messages.map((msg, i) => (
             <div key={i} className={`chat-message ${msg.role}`}>
-              {msg.role === 'assistant' ? (
-                <div>
-                  {/* ReAct Thought Chain Collapsible */}
-                  {msg.thoughtSteps && msg.thoughtSteps.length > 0 && (
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '8px 12px',
-                      marginBottom: 'var(--space-sm)',
-                      fontSize: 'var(--font-size-xs)',
-                    }}>
-                      <div
-                        onClick={() => toggleThought(i)}
-                        style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          cursor: 'pointer', color: 'var(--primary-light)', fontWeight: 600
-                        }}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Bot size={13} /> Calculation & Analysis Steps ({msg.thoughtSteps.length})
-                        </span>
-                        {openThoughts[i] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              <div className="chat-avatar">
+                {msg.role === 'assistant' ? <Bot size={16} /> : (user?.name?.[0] || 'U')}
+              </div>
+              <div className="chat-content">
+                {msg.role === 'assistant' ? (
+                  <div>
+                    {/* ReAct Thought Chain Collapsible */}
+                    {msg.thoughtSteps && msg.thoughtSteps.length > 0 && (
+                      <div className="thought-container">
+                        <button
+                          type="button"
+                          className="thought-toggle"
+                          onClick={() => toggleThought(i)}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Bot size={13} /> Calculation & Analysis Steps ({msg.thoughtSteps.length})
+                          </span>
+                          {openThoughts[i] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </button>
+
+                        {openThoughts[i] && (
+                          <div className="thought-steps-list">
+                            {msg.thoughtSteps.map((step, sIdx) => (
+                              <div key={sIdx} className="thought-step-item">
+                                <span className="thought-step-num">Step {sIdx + 1}</span>
+                                <div className="thought-step-text">{step}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
+                    )}
 
-                      {openThoughts[i] && (
-                        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-color)', color: 'var(--text-secondary)' }}>
-                          {msg.thoughtSteps.map((step, sIdx) => (
-                            <div key={sIdx} style={{ marginBottom: '4px', fontFamily: 'monospace' }}>
-                              • {step}
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                    {/* Main Response Markdown */}
+                    <div className="markdown-content">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                     </div>
-                  )}
 
-                  {/* Main Response Markdown */}
+                    {/* Human-in-the-Loop (HITL) Interactive Action Card */}
+                    {msg.hitlAction && (
+                      <div className="hitl-card">
+                        <div className="hitl-header">
+                          <ShieldAlert size={16} className="hitl-icon" />
+                          <span className="hitl-title">Proposed Action — Review & Confirm</span>
+                        </div>
+
+                        <p className="hitl-desc">{msg.hitlAction.summary || msg.hitlAction.description}</p>
+
+                        {/* Approval buttons */}
+                        {!actionStatuses[i] && (
+                          <div className="hitl-buttons">
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleApproveAction(i, msg.hitlAction)}
+                            >
+                              <CheckCircle2 size={14} /> Approve & Save
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              onClick={() => handleRejectAction(i)}
+                            >
+                              <XCircle size={14} /> Decline
+                            </button>
+                          </div>
+                        )}
+
+                        {actionStatuses[i] === 'loading' && (
+                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--accent-primary)', marginTop: '8px' }}>
+                            Applying action to your account...
+                          </div>
+                        )}
+
+                        {actionStatuses[i] === 'approved' && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontSize: 'var(--font-size-xs)', fontWeight: 600, marginTop: '8px' }}>
+                            <CheckCircle2 size={14} /> Approved & Added to Your Financial Records
+                          </div>
+                        )}
+
+                        {actionStatuses[i] === 'rejected' && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: 'var(--font-size-xs)', marginTop: '8px' }}>
+                            <XCircle size={14} /> Declined by user
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
                   <div className="markdown-content">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                   </div>
-
-                  {/* Human-in-the-Loop (HITL) Interactive Action Card */}
-                  {msg.hitlAction && (
-                    <div style={{
-                      marginTop: 'var(--space-md)',
-                      background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(16, 185, 129, 0.08))',
-                      border: '1px solid var(--primary)',
-                      borderRadius: 'var(--radius-md)',
-                      padding: 'var(--space-md)',
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <ShieldAlert size={18} color="var(--primary)" />
-                        <strong style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)' }}>
-                          Proposed Action — Review & Confirm
-                        </strong>
-                      </div>
-
-                      <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-                        {msg.hitlAction.summary}
-                      </p>
-
-                      {/* Approval buttons */}
-                      {!actionStatuses[i] && (
-                        <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
-                          <button
-                            className="btn btn-primary btn-sm"
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            onClick={() => handleApproveAction(i, msg.hitlAction)}
-                          >
-                            <CheckCircle2 size={14} /> Approve & Save
-                          </button>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}
-                            onClick={() => handleRejectAction(i)}
-                          >
-                            <XCircle size={14} /> Decline
-                          </button>
-                        </div>
-                      )}
-
-                      {actionStatuses[i] === 'loading' && (
-                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--primary)' }}>
-                          Applying action to your account...
-                        </div>
-                      )}
-
-                      {actionStatuses[i] === 'approved' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontSize: 'var(--font-size-xs)', fontWeight: 600 }}>
-                          <CheckCircle2 size={14} /> Approved & Added to Your Financial Records
-                        </div>
-                      )}
-
-                      {actionStatuses[i] === 'rejected' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: 'var(--font-size-xs)' }}>
-                          <XCircle size={14} /> Declined by user
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                msg.content
-              )}
+                )}
+              </div>
             </div>
           ))}
 
           {loading && (
             <div className="chat-message assistant">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: 'var(--font-size-xs)' }}>
-                <Bot size={16} className="spin" />
-                <span>FinGuide AI is analyzing your financial records...</span>
+              <div className="chat-avatar"><Bot size={16} /></div>
+              <div className="chat-content">
+                <div className="chat-typing">
+                  <span />
+                  <span />
+                  <span />
+                </div>
               </div>
             </div>
           )}
