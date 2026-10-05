@@ -26,20 +26,12 @@ export default function AdvisorDrawer() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isOpen, closeAdvisor, toggleAdvisor, queuedPrompt, consumeQueuedPrompt } = useAdvisor();
+  const { isOpen, closeAdvisor, toggleAdvisor, queuedPrompt, consumeQueuedPrompt, messages, setMessages, openThoughts, setOpenThoughts, actionStatuses, setActionStatuses } = useAdvisor();
   const { theme, toggleTheme } = useTheme();
 
   const [useReactMode, setUseReactMode] = useState(true);
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: `Hi ${user?.name || 'there'}! 👋 I'm **FinGuide**, your personal financial advisor.\n\nI can analyze your spending, calculate realistic savings targets, and propose smart budgets and financial goals with your approval.\n\nAsk me anything or say *"Help me plan my budget"*!`,
-    },
-  ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [openThoughts, setOpenThoughts] = useState({});
-  const [actionStatuses, setActionStatuses] = useState({});
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 

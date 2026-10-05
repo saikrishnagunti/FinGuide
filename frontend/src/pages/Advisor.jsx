@@ -4,20 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Send, Bot, Sparkles, CheckCircle2, XCircle, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
+import { useAdvisor } from '../context/AdvisorContext';
 
 export default function Advisor() {
   const { user } = useAuth();
   const [useReactMode, setUseReactMode] = useState(true);
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: `Hi ${user?.name || 'there'}! 👋 I'm your FinGuide AI financial advisor.\n\nI can analyze your spending patterns, forecast savings, and help you plan budgets and financial goals. Whenever I suggest creating a budget or goal, you'll be able to review and approve it before anything changes.\n\nTry asking:\n- "Can I afford to buy a ₹45,000 laptop in 4 months?"\n- "Propose a savings goal for an Emergency Fund of ₹50,000"\n- "Analyze my top spending categories and set a budget cap"\n- "Where is most of my money going?"`,
-    },
-  ]);
+  const { messages, setMessages, openThoughts, setOpenThoughts, actionStatuses, setActionStatuses } = useAdvisor();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [openThoughts, setOpenThoughts] = useState({});
-  const [actionStatuses, setActionStatuses] = useState({}); // { [msgIndex]: 'approved' | 'rejected' }
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
